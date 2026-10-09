@@ -24,6 +24,12 @@
 html,body{height:100%;margin:0;background:var(--ink);color:var(--chrome);font-family:var(--body);overflow:hidden;
   -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
 #gl{position:fixed;inset:0;touch-action:none}
+/* coach stop: the game freezes, one instruction in big type, then you do it */
+#coach{position:fixed;inset:0;z-index:45;display:flex;align-items:center;justify-content:center;background:rgba(4,6,20,.55);padding:12px}
+#coach .cwin{width:min(560px,100%);max-height:calc(100% - 8px);overflow:auto;background:linear-gradient(#2d4fd6,#14238a);border:3px solid #e9eefc;border-radius:12px;box-shadow:0 0 0 3px #0b1033,0 12px 30px rgba(0,0,0,.6);padding:14px 18px 16px;text-align:center;font-family:"DotGothic16",var(--body)}
+#coach .ck{font-size:13px;letter-spacing:.2em;color:var(--gold)}#coach .ct{font-size:clamp(20px,3.6vw,28px);color:#fff;margin:4px 0 6px;line-height:1.2}
+#coach .cb{font-size:clamp(15px,2.4vw,18px);color:#dfe6ff;line-height:1.45;margin-bottom:12px}#coach kbd{display:inline-block;min-width:1.6em;padding:0 6px;border:2px solid #fff;border-radius:6px;background:#0b1033;color:#fff;font-family:inherit;margin:0 2px}
+#coach .big{font-size:22px;padding:6px 26px 2px}
 /* phones play sideways only: upright shows a rotate card over everything */
 #rotate{display:none;position:fixed;inset:0;z-index:100;background:#06080f;color:var(--chrome);flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;padding:24px;font-family:"DotGothic16",var(--body)}
 #rotate b{font-size:22px;color:var(--gold)}#rotate small{font-size:15px;color:var(--dim)}
@@ -31,10 +37,15 @@ html,body{height:100%;margin:0;background:var(--ink);color:var(--chrome);font-fa
 #rotate .rphone i{position:absolute;left:50%;bottom:5px;width:10px;height:4px;margin-left:-5px;background:var(--chrome);border-radius:2px}
 @keyframes rot{0%,25%{transform:rotate(0)}55%,85%{transform:rotate(-90deg)}100%{transform:rotate(0)}}
 @media (orientation:portrait) and (pointer:coarse){#rotate{display:flex}}
-#a2hs{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 10px);z-index:60;width:min(560px,calc(100% - 24px));background:#13205e;border:2px solid #5d84ff;border-radius:10px;padding:10px 40px 10px 14px;font-size:14px;line-height:1.4;color:var(--chrome);box-shadow:0 6px 20px rgba(0,0,0,.5)}
-#a2hs .shr{display:inline-block;padding:0 6px;border:1px solid #8fb0ff;border-radius:4px}
-#a2hs button{position:absolute;right:6px;top:6px;background:none;border:0;color:var(--chrome);font-size:18px;padding:4px 8px}
+#a2hs{position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;background:rgba(4,6,20,.7);padding:10px}
+#a2hs[hidden]{display:none}
+#a2hs .awin{width:min(520px,100%);max-height:100%;overflow:auto;background:linear-gradient(#2d4fd6,#14238a);border:3px solid #e9eefc;border-radius:12px;box-shadow:0 0 0 3px #0b1033;padding:12px 18px 14px;text-align:center;font-family:"DotGothic16",var(--body);color:#fff}
+#a2hs .ak{font-size:12px;letter-spacing:.2em;color:var(--gold)}#a2hs .at{font-size:21px;margin:2px 0 8px;line-height:1.2}
+#a2hs .ab{font-size:15px;line-height:1.5;color:#dfe6ff;text-align:left;margin:0 auto 10px;max-width:420px}#a2hs .ab ol{margin:0;padding-left:22px}
+#a2hs .shr{display:inline-block;padding:0 6px;border:1px solid #8fb0ff;border-radius:4px;background:#0b1033}
+#a2hs .abtn{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}#a2hs .big{font-size:20px;padding:4px 22px 1px}#a2hs .ghost{font-size:18px;padding:4px 18px 1px}
 #gl canvas{display:block;width:100%;height:100%}
+body.retro #gl canvas{image-rendering:pixelated;image-rendering:crisp-edges}
 #fx{position:fixed;inset:0;z-index:1;pointer-events:none}
 #fx::after{content:"";position:absolute;inset:-50%;opacity:.07;mix-blend-mode:overlay;animation:grain .5s steps(4) infinite;
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
@@ -376,6 +387,15 @@ button:focus-visible{outline:none}
 .tutwin td:first-child{white-space:nowrap;color:#ffe27a;width:40%}
 .tutwin kbd{font-family:var(--pixh);background:#0b1033;border:2px solid #f4f6ff;border-radius:4px;padding:0 6px;margin:0 2px;font-size:14px}
 .tutwin .go{margin-top:16px;text-align:center}
+/* the GOT IT button always stays on screen; short sideways phones get a compact two-column sheet */
+.tutwin{display:flex;flex-direction:column}.tutwin .go{position:sticky;bottom:-10px;background:inherit;padding:10px 0 4px;margin-bottom:-4px}
+@media (max-height:520px){
+  #howto{padding:6px}.tutwin{max-height:calc(100dvh - 12px);padding:8px 12px 10px}
+  .tutwin h3{font-size:19px}.tutwin .sub{display:none}.tutwin .tabs{margin:4px 0 6px;gap:8px}.tutwin .tabs button{font-size:14px;padding:4px 10px}
+  .tutwin table{font-size:13px}.tutwin td{padding:3px 6px}.tutwin .go .big{font-size:18px;padding:4px 22px 1px}
+  #coach .cwin{padding:8px 14px 10px}#coach .ct{font-size:20px}#coach .cb{font-size:14px;margin-bottom:8px}
+  #dialog .dlg{max-height:46vh}
+}
 </style>
 
 <div id="gl"></div>
@@ -447,6 +467,8 @@ button:focus-visible{outline:none}
       <button data-v="60">1 MIN</button><button data-v="120" aria-pressed="true">2 MIN</button><button data-v="180">3 MIN</button></div></div>
     <div class="opt"><h3>DIFFICULTY</h3><div class="seg" id="optDiff">
       <button data-v="jv">JV</button><button data-v="varsity" aria-pressed="true">VARSITY</button><button data-v="state">STATE</button></div></div>
+    <div class="opt"><h3>DEFENSE</h3><div class="seg" id="optMode">
+      <button data-v="offense" aria-pressed="true">SIMULATED</button><button data-v="both">YOU PLAY IT</button></div></div>
   </div>
   <p class="lede" style="margin-top:22px">Drag the left side to run. Hold a receiver (or 1 · 2 · 3) and release when the ring closes to throw. Hold TURBO to burst, tap JUKE to make a defender miss.</p>
   <button class="big" id="kickBtn">KICKOFF</button>
@@ -458,8 +480,11 @@ button:focus-visible{outline:none}
   <div class="offtabs seg" id="offTabs"></div>
   <div class="offbody" id="officeBody"></div>
 </section>
+<div id="coach" hidden><div class="cwin"><div class="ck">COACH SAYS</div><div class="ct" id="coachT"></div><div class="cb" id="coachB"></div><button class="big" id="coachGo">GOT IT</button></div></div>
 <div id="rotate" aria-live="polite"><div class="rphone"><i></i></div><b>Turn your phone sideways</b><small>Homecoming plays in landscape.</small></div>
-<div id="a2hs" hidden><b>Play full screen:</b> tap <span class="shr">Share</span> then <b>Add to Home Screen</b>, and open Homecoming from your home screen.<button id="a2hsX" aria-label="Dismiss">✕</button></div>
+<div id="a2hs" hidden><div class="awin"><div class="ak">BEST EXPERIENCE</div><div class="at">Put Homecoming on your home screen</div>
+  <div class="ab" id="a2hsSteps"></div>
+  <div class="abtn"><button class="big" id="a2hsGo" hidden>INSTALL</button><button class="ghost" id="a2hsX">NOT NOW</button></div></div></div>
 <div id="dialog" hidden><div id="dlgBack"></div><canvas id="dlgPix"></canvas><canvas id="dlgStage"></canvas><canvas id="dlgFx"></canvas><img id="dlgFace" alt="" hidden><div class="dlg" id="dlgBox"><canvas id="dlgPort" width="48" height="48"></canvas><div class="dlgbody"><div class="dlgname" id="dlgWho"></div><p id="dlgText" aria-live="polite"></p><span class="dlgmore" aria-hidden="true">▼</span><div id="dlgChoices"></div></div></div></div>
 <div id="howto" hidden></div>
 <div id="chapter" hidden><div class="lines"></div><div class="sun"></div><div class="bar top"></div><div class="bar bot"></div><div class="ct"><div class="k" id="chK"></div><div class="t" id="chT"></div><div class="j" id="chJ"></div></div></div>
@@ -469,6 +494,7 @@ button:focus-visible{outline:none}
     <button class="big" id="resumeBtn">RESUME</button>
     <button class="ghost" id="howBtn">CONTROLS</button>
     <button class="ghost" id="soundBtn">SOUND: ON</button>
+    <button class="ghost" id="gfxBtn">GRAPHICS: RETRO</button>
     <button class="ghost" id="quitBtn">QUIT GAME</button>
   </div>
 </section>
@@ -776,6 +802,12 @@ const renderer = new THREE.WebGLRenderer({antialias:true, powerPreference:"high-
 const LITE = matchMedia("(pointer: coarse)").matches || /iPhone|iPad|Android/i.test(navigator.userAgent) || /[?&]lite\b/.test(location.search);
 const PR_MAX = Math.min(window.devicePixelRatio || 1, LITE ? 1.6 : 2);
 let prNow = PR_MAX;
+// RETRO (default): the 3D renders at about 320 lines and is blown up with hard pixels and a 15-bit dithered
+// palette, late-90s console style. It hides small glitches, matches the pixel menus, and is far cheaper on phones.
+let RETRO = (() => { try { return localStorage.getItem("hc_gfx") !== "hd"; } catch(e){ return true; } })();
+const RETRO_H = 320;
+const retroPR = () => Math.min(PR_MAX, Math.max(.2, RETRO_H / Math.max(1, innerHeight)));
+if (RETRO) prNow = retroPR();
 renderer.setPixelRatio(prNow);
 renderer.outputEncoding = THREE.sRGBEncoding;
 renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.05;
@@ -839,7 +871,17 @@ const GRADE = {
       vec2 q = vUv - .5; c *= 1. - uVig*dot(q,q)*2.2;
       gl_FragColor = vec4(clamp(c,0.,1.), 1.); }`
 };
-let inkPass = null, fxaaPass = null;
+let inkPass = null, fxaaPass = null, retroPass = null;
+const RETROPASS = {
+  uniforms: {tDiffuse: {value: null}},
+  vertexShader: "varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix*modelViewMatrix*vec4(position,1.); }",
+  // 15-bit color (5 bits a channel) with a 4x4 ordered dither, like a late-90s console framebuffer
+  fragmentShader: `uniform sampler2D tDiffuse; varying vec2 vUv;
+    float bayer(vec2 p){ vec2 q = mod(floor(p), 4.); float i = q.x + q.y*4.;
+      return (i < 1. ? 0. : i < 2. ? 8. : i < 3. ? 2. : i < 4. ? 10. : i < 5. ? 12. : i < 6. ? 4. : i < 7. ? 14. : i < 8. ? 6. : i < 9. ? 3. : i < 10. ? 11. : i < 11. ? 1. : i < 12. ? 9. : i < 13. ? 15. : i < 14. ? 7. : i < 15. ? 13. : 5.)/16.; }
+    void main(){ vec3 c = texture2D(tDiffuse, vUv).rgb; float d = bayer(gl_FragCoord.xy) - .5;
+      c = floor(c*31. + .5 + d*.9)/31.; gl_FragColor = vec4(clamp(c, 0., 1.), 1.); }`
+};
 function sizeInk(){
   const pr = renderer.getPixelRatio(), w = Math.floor(innerWidth*pr), h = Math.floor(innerHeight*pr);
   if (inkPass){ inkPass.uniforms.res.value.set(w, h); inkPass.uniforms.px.value = Math.max(1, pr*.75); inkPass.uniforms.near.value = camera.near; inkPass.uniforms.far.value = camera.far; }
@@ -858,12 +900,18 @@ function setupPost(){
     // (the anime ink + screentone pass is retired: the game now aims for a 2000s broadcast look)
     if (!LITE){ bloomPass = new THREE.UnrealBloomPass(new THREE.Vector2(w/2, h/2), .42, .5, .92); composer.addPass(bloomPass); }
     gradePass = new THREE.ShaderPass(GRADE); composer.addPass(gradePass);
+    retroPass = new THREE.ShaderPass(RETROPASS); retroPass.enabled = RETRO; composer.addPass(retroPass);
     if (THREE.FXAAShader && pr < 1.7){ fxaaPass = new THREE.ShaderPass(THREE.FXAAShader); composer.addPass(fxaaPass); }
     sizeInk();
   } catch(e){ console.warn("post off", e); composer = null; }
 }
 function resize(){
-  const w = innerWidth, h = innerHeight; renderer.setSize(w, h); camera.aspect = w/h;
+  const w = innerWidth, h = innerHeight;
+  if (RETRO){ prNow = retroPR(); renderer.setPixelRatio(prNow); }
+  renderer.setSize(w, h); camera.aspect = w/h;
+  document.body.classList.toggle("retro", RETRO);
+  if (composer && composer.setPixelRatio) composer.setPixelRatio(renderer.getPixelRatio());
+  if (retroPass) retroPass.enabled = RETRO; if (fxaaPass) fxaaPass.enabled = !RETRO;
   camera.fov = w/h < 1 ? 62 : 48; camera.updateProjectionMatrix();
   if (composer){ composer.setSize(w, h); sizeInk(); }
 }
@@ -2133,7 +2181,7 @@ function toPlayCall(delay=0){
 }
 
 function showPlayCall(){
-  if (G.poss === 1 && G.career && (G.tutorialGame || (CAR && CAR.settings.mode === "offense"))){
+  if (G.poss === 1 && (G.career ? (G.tutorialGame || (CAR && CAR.settings.mode === "offense")) : G.quickMode !== "both")){
     $("playcall").hidden = true; G.phase = "dead";
     const r = careerSimDrive();
     if (r.pts) G.pending = {type:"kickoff", team:1, spot:60}; else setPossession(0, r.nextSpot);
@@ -2170,7 +2218,7 @@ function showPlayCall(){
     Object.entries(DEF_CALLS).forEach(([id, d]) => add(id, d.name, d.key, false, cv => drawDef(cv, id)));
   }
   $("playcall").hidden = false; $("recv").hidden = true; $("switch").hidden = true; setAct(off ? "SNAP" : "DIVE");
-  if (off) tip("play", "Pick a play. You can see the defense lined up before you snap.");
+  if (off) coach("play", "Pick a play", i => i === "touch" ? "Tap a card. <b>Run</b> plays hand it to your back; <b>pass</b> plays let you throw." : i === "pad" ? "Move with the <b>D-pad</b>, press <kbd>A</kbd> to pick. <b>Run</b> or <b>pass</b>." : "Click a card or press <kbd>1</kbd>–<kbd>5</kbd>. <b>Run</b> plays hand it off; <b>pass</b> plays let you throw.");
 }
 
 function drawPlay(cv, id){
@@ -2325,7 +2373,7 @@ function startPresnap(playId, defCall){
   $("switch").hidden = off === 0;
   $("recv").hidden = !(off === 0 && play.kind === "pass");
   if (off === 0){
-    tip("snap", play.kind === "pass" ? "Tap <b>SNAP</b>. Then <b>hold</b> a receiver (or his number) and release as the ring closes on him." : "Tap <b>SNAP</b>. You're the running back: drag to cut, hold <b>TURBO</b>, tap <b>JUKE</b> near a tackler.");
+    coach("snap", "Snap the ball", i => (i === "touch" ? "Tap <b>SNAP</b>" : i === "pad" ? "Press <kbd>A</kbd>" : "Press <kbd>Space</kbd>") + " to start the play." + (play.kind === "pass" ? " We'll stop again to show you how to throw." : " You'll be the running back."));
   } else {
     tip("def", "You control the player in the ring. Drag to move, <b>DIVE</b> to tackle, <b>SWITCH</b> to the man nearest the ball. Let go and he plays on his own.");
     setTimeout(() => { if (G.phase === "presnap" && G.poss === 1) snap(); }, 1100);
@@ -2335,6 +2383,11 @@ function startPresnap(playId, defCall){
 function snap(){
   if (G.phase !== "presnap" || G.special || G.fg) return;
   for (const p of [...teams[0], ...teams[1]]) if (p.fx !== undefined){ p.x = p.fx; p.z = p.fz; p.vx = 0; p.vz = 0; p.tx = p.x; p.tz = p.z; }
+  if (G.poss === 0 && !G.special){ const pk = PLAYS[G.offPlay] && PLAYS[G.offPlay].kind;
+    setTimeout(() => { if (G.phase !== "live" || G.poss !== 0) return;
+      if (pk === "pass" && G.sub === "pre") coach("throw", "Throw it!", i => (i === "touch" ? "<b>Hold</b> a receiver's number button" : i === "pad" ? "<b>Hold</b> <kbd>X</kbd> <kbd>Y</kbd> or <kbd>B</kbd> (receivers 1, 2, 3)" : "<b>Hold</b> <kbd>1</kbd> <kbd>2</kbd> or <kbd>3</kbd> (the numbers over your receivers)") + ". A ring shrinks around him: <b>let go when it closes</b>. Pick the one with nobody near him.");
+      else if (pk !== "pass" && G.carrier && G.carrier.team === 0) coach("run", "Run it!", i => (i === "touch" ? "<b>Drag</b> the left side of the screen to steer. Hold <b>TURBO</b> to burst, tap <b>JUKE</b> when a tackler is close." : i === "pad" ? "Steer with the <b>left stick</b>. Hold <kbd>RT</kbd> for turbo, press <kbd>A</kbd> to juke a tackler." : "Steer with <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> or arrows. Hold <kbd>Shift</kbd> for turbo, <kbd>Space</kbd> to juke a tackler.") + " Find the hole and go.");
+    }, pk === "pass" ? 450 : 650); }
   G.phase = "live"; G.playT = 0; G.sub = "pre"; G.windup = null; G.aim = null; if (G.aimRing) G.aimRing.visible = false; G.completed = false; G.fumbleRec = false; G.loose = null; G.los0 = G.los; G.turnover = false; recStart();
   const O = teams[G.poss], qb = O.find(p => p.role === "QB");
   G.ball.held = qb; G.carrier = qb; G.qbDecideT = rand(1.2, 1.7);
@@ -2580,7 +2633,7 @@ function update(dt){
   // QB scrambles past the line: becomes a runner
   if (G.sub === "pre" && G.carrier && G.carrier.role === "QB" && (G.carrier.x - G.los)*d > .6){
     G.sub = "run"; G.icons.forEach(s => s.visible = false); $("recv").hidden = true;
-    if (G.carrier.team === 0){ setAct("SLIDE"); tip("slide", "You're running with the QB. Tap <b>SLIDE</b> before contact: QBs who take hits fumble a lot."); }
+    if (G.carrier.team === 0){ setAct("SLIDE"); coach("slide", "Your QB is running", i => (i === "touch" ? "Tap <b>SLIDE</b>" : i === "pad" ? "Press <kbd>A</kbd>" : "Press <kbd>Space</kbd>") + " to slide before a hit. Quarterbacks who take big hits fumble a lot."); }
   }
   // CPU quarterback
   if (G.sub === "pre" && off === 1 && G.carrier && G.carrier.role === "QB" && play.kind === "pass") cpuQB(dt);
@@ -3946,6 +3999,23 @@ function tip(key, html){
   if (G.tipsSeen[key]) return; G.tipsSeen[key] = 1; store.set("hc_tips", JSON.stringify(G.tipsSeen));
   const t = $("tip"); t.innerHTML = html; t.style.opacity = 1; clearTimeout(tipTO); tipTO = setTimeout(() => t.style.opacity = 0, 6500);
 }
+// coach stop: the first time a move matters, freeze the game and say exactly what to press on this device
+const INPUT = () => usingPad ? "pad" : usingTouch ? "touch" : "keys";
+function coach(key, title, body, after){
+  if (G.tipsSeen["c_" + key]) { after && after(); return false; }
+  G.tipsSeen["c_" + key] = 1; store.set("hc_tips", JSON.stringify(G.tipsSeen));
+  const b = typeof body === "function" ? body(INPUT()) : body;
+  $("coachT").innerHTML = title; $("coachB").innerHTML = b; $("coach").hidden = false; G.paused = true; G.coachAfter = after || null;
+  sfx("open", .5); if (window.gsap) gsap.fromTo("#coach .cwin", {scale: .85, opacity: 0}, {scale: 1, opacity: 1, duration: .25, ease: "back.out(1.6)"});
+  return true;
+}
+function coachDone(){
+  if ($("coach").hidden) return; $("coach").hidden = true; G.paused = false; sfx("confirm", .5);
+  const a = G.coachAfter; G.coachAfter = null; a && a();
+}
+$("coachGo").onclick = e => { e.stopPropagation(); coachDone(); };
+$("coach").addEventListener("pointerdown", e => { if (e.target === $("coach")) coachDone(); });
+addEventListener("keydown", e => { if ($("coach").hidden) return; if (["Space","Enter","Escape","NumpadEnter"].includes(e.code)){ e.preventDefault(); e.stopImmediatePropagation(); coachDone(); } }, true);
 function setAct(label){ $("act").textContent = label; }
 // menu cursor blip when the mouse moves onto a button (RPG-style); touch doesn't hover
 let hoverEl = null, hoverT = 0;
@@ -5215,7 +5285,7 @@ function careerAfterGame(){
 }
 // offense-only mode: the CPU's possession is simulated as one drive
 function careerSimDrive(){
-  const opp = G.career, edge = opp.oppSkill || 0, r = Math.random();
+  const opp = G.career || {}, edge = opp.oppSkill || (G.diff ? (G.diff.rating - 70)/40 : 0), r = Math.random();
   const fromX = G.los, dtg = distToGoal(1, fromX);
   const td = .2 + edge*.5 + (dtg < 50 ? .15 : 0), fg = .14, to = .1 - edge*.15;
   let msg, sub, pts = 0, nextSpot;
@@ -5437,6 +5507,8 @@ function segBind(id, cb){ $(id).addEventListener("click", e => { const b = e.tar
   $(id).querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x === b)); cb(b.dataset.v); SFX.tick(); }); }
 segBind("optLen", v => G.qLen = +v);
 segBind("optDiff", v => G.diff = DIFF[v]);
+G.quickMode = "offense";                     // quick games start offense-only (defense simulated), like the career default
+segBind("optMode", v => G.quickMode = v);
 
 $("playBtn").addEventListener("click", () => { audioInit(); SFX.tick(); G.pickingFor = "quick"; pickState.step = 0; renderPick(); showScreen("pick"); });
 $("careerBtn").addEventListener("click", () => { audioInit(); SFX.tick(); openCareerMenu(); });
@@ -5456,6 +5528,9 @@ $("resumeBtn").addEventListener("click", () => { G.paused = false; showScreen(nu
 $("howBtn").addEventListener("click", () => showHowto());
 $("soundBtn").addEventListener("click", () => { sound = !sound; store.set("hc_sound", sound ? "on" : "off"); $("soundBtn").textContent = `SOUND: ${sound ? "ON" : "OFF"}`; });
 $("soundBtn").textContent = `SOUND: ${sound ? "ON" : "OFF"}`;
+$("gfxBtn").textContent = `GRAPHICS: ${RETRO ? "RETRO" : "HD"}`;
+$("gfxBtn").addEventListener("click", () => { RETRO = !RETRO; store.set("hc_gfx", RETRO ? "retro" : "hd");
+  if (!RETRO){ prNow = PR_MAX; renderer.setPixelRatio(prNow); } resize(); $("gfxBtn").textContent = `GRAPHICS: ${RETRO ? "RETRO" : "HD"}`; });
 $("quitBtn").addEventListener("click", () => quitToMenu());
 $("againBtn").addEventListener("click", () => { $("menuBtn").hidden = false; startGame(); });
 $("newBtn").addEventListener("click", () => quitToMenu(true));
@@ -5551,15 +5626,25 @@ function toggleFS(){
   } catch(e){}
 }
 $("fsBtn").addEventListener("click", toggleFS);
+const ssGet = k => { try { return sessionStorage.getItem(k); } catch(e){ return null; } };
 const IS_IOS = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
 const STANDALONE = matchMedia("(display-mode: standalone)").matches || matchMedia("(display-mode: fullscreen)").matches || navigator.standalone === true;
 if (matchMedia("(pointer: coarse)").matches && !STANDALONE){
   // the first touch on a phone takes the game full screen and holds it sideways (Android/Chrome; iOS can't)
   addEventListener("pointerup", function goFS(){ removeEventListener("pointerup", goFS, true);
     if (fsOK() && !(document.fullscreenElement || document.webkitFullscreenElement)) toggleFS(); }, true);
-  if (IS_IOS && !store.get("hc_a2hs")){ $("a2hs").hidden = false; }
+  // every visit in the browser, ask once to install: full screen, no browser bars, its own icon
+  if (IS_IOS && !ssGet("hc_a2hs")){
+    $("a2hsSteps").innerHTML = `It plays full screen with no Safari bars, like a real app:<ol><li>Tap <span class="shr">Share</span> (the square with the arrow)</li><li>Scroll down, tap <b>Add to Home Screen</b></li><li>Open <b>Homecoming</b> from your home screen</li></ol>`;
+    $("a2hs").hidden = false;
+  }
 }
-$("a2hsX").onclick = e => { e.stopPropagation(); $("a2hs").hidden = true; store.set("hc_a2hs", "1"); };
+let installEvt = null;
+addEventListener("beforeinstallprompt", e => { e.preventDefault(); installEvt = e;
+  if (STANDALONE || ssGet("hc_a2hs") || !matchMedia("(pointer: coarse)").matches) return;
+  $("a2hsSteps").innerHTML = "Install it and it opens full screen, sideways, with its own icon. Free, no download store."; $("a2hsGo").hidden = false; $("a2hs").hidden = false; });
+$("a2hsGo").onclick = async e => { e.stopPropagation(); $("a2hs").hidden = true; if (installEvt){ installEvt.prompt(); installEvt = null; } };
+$("a2hsX").onclick = e => { e.stopPropagation(); $("a2hs").hidden = true; try { sessionStorage.setItem("hc_a2hs", "1"); } catch(err){} };
 addEventListener("keydown", e => { if (e.code === "KeyF" && G.phase !== "menu") toggleFS(); });
 
 /* ---- game controllers (standard controllers via the Gamepad API) ----
@@ -5727,7 +5812,7 @@ if (/[?&]debug\b/.test(location.search)) debugPanel();
 
 const DYN = {acc: 0, n: 0, t: 0};
 function dynResolution(rawDt){
-  if (G.phase === "menu" || document.hidden) return;
+  if (G.phase === "menu" || document.hidden || RETRO) return;
   DYN.acc += rawDt; DYN.n++; DYN.t += rawDt;
   if (DYN.t < 1.5) return;
   const avg = DYN.acc/DYN.n; DYN.acc = 0; DYN.n = 0; DYN.t = 0;
