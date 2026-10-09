@@ -1,0 +1,310 @@
+{
+ "states": [
+  {
+   "code": "AL",
+   "name": "Alabama",
+   "count": 298,
+   "fields": 250
+  },
+  {
+   "code": "AK",
+   "name": "Alaska",
+   "count": 26,
+   "fields": 22
+  },
+  {
+   "code": "AZ",
+   "name": "Arizona",
+   "count": 226,
+   "fields": 199
+  },
+  {
+   "code": "AR",
+   "name": "Arkansas",
+   "count": 213,
+   "fields": 125
+  },
+  {
+   "code": "CA",
+   "name": "California",
+   "count": 999,
+   "fields": 806
+  },
+  {
+   "code": "CO",
+   "name": "Colorado",
+   "count": 241,
+   "fields": 226
+  },
+  {
+   "code": "CT",
+   "name": "Connecticut",
+   "count": 144,
+   "fields": 116
+  },
+  {
+   "code": "DE",
+   "name": "Delaware",
+   "count": 35,
+   "fields": 33
+  },
+  {
+   "code": "DC",
+   "name": "District of Columbia",
+   "count": 23,
+   "fields": 23
+  },
+  {
+   "code": "FL",
+   "name": "Florida",
+   "count": 444,
+   "fields": 298
+  },
+  {
+   "code": "GA",
+   "name": "Georgia",
+   "count": 401,
+   "fields": 315
+  },
+  {
+   "code": "HI",
+   "name": "Hawaii",
+   "count": 41,
+   "fields": 21
+  },
+  {
+   "code": "ID",
+   "name": "Idaho",
+   "count": 105,
+   "fields": 82
+  },
+  {
+   "code": "IL",
+   "name": "Illinois",
+   "count": 526,
+   "fields": 409
+  },
+  {
+   "code": "IN",
+   "name": "Indiana",
+   "count": 318,
+   "fields": 303
+  },
+  {
+   "code": "IA",
+   "name": "Iowa",
+   "count": 258,
+   "fields": 220
+  },
+  {
+   "code": "KS",
+   "name": "Kansas",
+   "count": 252,
+   "fields": 224
+  },
+  {
+   "code": "KY",
+   "name": "Kentucky",
+   "count": 188,
+   "fields": 154
+  },
+  {
+   "code": "LA",
+   "name": "Louisiana",
+   "count": 223,
+   "fields": 141
+  },
+  {
+   "code": "ME",
+   "name": "Maine",
+   "count": 70,
+   "fields": 56
+  },
+  {
+   "code": "MD",
+   "name": "Maryland",
+   "count": 185,
+   "fields": 143
+  },
+  {
+   "code": "MA",
+   "name": "Massachusetts",
+   "count": 254,
+   "fields": 200
+  },
+  {
+   "code": "MI",
+   "name": "Michigan",
+   "count": 488,
+   "fields": 413
+  },
+  {
+   "code": "MN",
+   "name": "Minnesota",
+   "count": 313,
+   "fields": 283
+  },
+  {
+   "code": "MS",
+   "name": "Mississippi",
+   "count": 131,
+   "fields": 103
+  },
+  {
+   "code": "MO",
+   "name": "Missouri",
+   "count": 303,
+   "fields": 268
+  },
+  {
+   "code": "MT",
+   "name": "Montana",
+   "count": 93,
+   "fields": 82
+  },
+  {
+   "code": "NE",
+   "name": "Nebraska",
+   "count": 218,
+   "fields": 205
+  },
+  {
+   "code": "NV",
+   "name": "Nevada",
+   "count": 66,
+   "fields": 54
+  },
+  {
+   "code": "NH",
+   "name": "New Hampshire",
+   "count": 42,
+   "fields": 34
+  },
+  {
+   "code": "NJ",
+   "name": "New Jersey",
+   "count": 353,
+   "fields": 236
+  },
+  {
+   "code": "NM",
+   "name": "New Mexico",
+   "count": 104,
+   "fields": 90
+  },
+  {
+   "code": "NY",
+   "name": "New York",
+   "count": 555,
+   "fields": 475
+  },
+  {
+   "code": "NC",
+   "name": "North Carolina",
+   "count": 370,
+   "fields": 312
+  },
+  {
+   "code": "ND",
+   "name": "North Dakota",
+   "count": 100,
+   "fields": 87
+  },
+  {
+   "code": "OH",
+   "name": "Ohio",
+   "count": 686,
+   "fields": 578
+  },
+  {
+   "code": "OK",
+   "name": "Oklahoma",
+   "count": 186,
+   "fields": 159
+  },
+  {
+   "code": "OR",
+   "name": "Oregon",
+   "count": 188,
+   "fields": 163
+  },
+  {
+   "code": "PA",
+   "name": "Pennsylvania",
+   "count": 543,
+   "fields": 411
+  },
+  {
+   "code": "RI",
+   "name": "Rhode Island",
+   "count": 38,
+   "fields": 29
+  },
+  {
+   "code": "SC",
+   "name": "South Carolina",
+   "count": 191,
+   "fields": 157
+  },
+  {
+   "code": "SD",
+   "name": "South Dakota",
+   "count": 84,
+   "fields": 77
+  },
+  {
+   "code": "TN",
+   "name": "Tennessee",
+   "count": 265,
+   "fields": 202
+  },
+  {
+   "code": "TX",
+   "name": "Texas",
+   "count": 1311,
+   "fields": 1070
+  },
+  {
+   "code": "UT",
+   "name": "Utah",
+   "count": 114,
+   "fields": 104
+  },
+  {
+   "code": "VT",
+   "name": "Vermont",
+   "count": 24,
+   "fields": 17
+  },
+  {
+   "code": "VA",
+   "name": "Virginia",
+   "count": 293,
+   "fields": 228
+  },
+  {
+   "code": "WA",
+   "name": "Washington",
+   "count": 295,
+   "fields": 256
+  },
+  {
+   "code": "WV",
+   "name": "West Virginia",
+   "count": 97,
+   "fields": 79
+  },
+  {
+   "code": "WI",
+   "name": "Wisconsin",
+   "count": 340,
+   "fields": 270
+  },
+  {
+   "code": "WY",
+   "name": "Wyoming",
+   "count": 55,
+   "fields": 50
+  }
+ ]
+}
