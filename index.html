@@ -806,7 +806,7 @@ let prNow = PR_MAX;
 // palette, late-90s console style. It hides small glitches, matches the pixel menus, and is far cheaper on phones.
 let RETRO = (() => { try { return localStorage.getItem("hc_gfx") !== "hd"; } catch(e){ return true; } })();
 const RETRO_H = 320;
-const retroPR = () => Math.min(PR_MAX, Math.max(.2, RETRO_H / Math.max(1, innerHeight)));
+const retroPR = () => Math.min(PR_MAX, Math.max(.2, RETRO_H / Math.max(1, innerHeight, (document.getElementById("gl") || {}).clientHeight || 0)));
 if (RETRO) prNow = retroPR();
 renderer.setPixelRatio(prNow);
 renderer.outputEncoding = THREE.sRGBEncoding;
@@ -905,18 +905,28 @@ function setupPost(){
     sizeInk();
   } catch(e){ console.warn("post off", e); composer = null; }
 }
+// size from the full-screen container, not innerHeight: iPhones (especially from the home screen) report a shorter
+// innerHeight than the screen, which left a black bar along the bottom
+function viewSize(){
+  const el = $("gl"), vv = window.visualViewport;
+  const w = Math.max(innerWidth, el.clientWidth || 0, vv ? Math.round(vv.width) : 0);
+  const h = Math.max(innerHeight, el.clientHeight || 0, vv ? Math.round(vv.height) : 0);
+  return [w, h];
+}
 function resize(){
-  const w = innerWidth, h = innerHeight;
+  const [w, h] = viewSize();
   if (RETRO){ prNow = retroPR(); renderer.setPixelRatio(prNow); }
-  renderer.setSize(w, h); camera.aspect = w/h;
+  renderer.setSize(w, h, false); camera.aspect = w/h;
   document.body.classList.toggle("retro", RETRO);
   if (composer && composer.setPixelRatio) composer.setPixelRatio(renderer.getPixelRatio());
   if (retroPass) retroPass.enabled = RETRO; if (fxaaPass) fxaaPass.enabled = !RETRO;
-  camera.fov = w/h < 1 ? 62 : 48; camera.updateProjectionMatrix();
+  camera.fov = w/h < 1 ? 62 : w/h > 1.8 ? 41 : 48; camera.updateProjectionMatrix();   // wide phone screens: tighter lens, bigger players
   if (composer){ composer.setSize(w, h); sizeInk(); }
 }
 setupPost();
 addEventListener("resize", resize); resize();
+addEventListener("orientationchange", () => [100, 400, 900].forEach(t => setTimeout(resize, t)));
+if (window.visualViewport) visualViewport.addEventListener("resize", resize);
 
 function shade(hex, k){ const c = new THREE.Color(hex); c.multiplyScalar(k); return "#"+c.getHexString(); }
 function luminance(hex){ const c = new THREE.Color(hex); return .2126*c.r+.7152*c.g+.0722*c.b; }
@@ -3931,8 +3941,9 @@ function updateCamera(dt){
   // on defense the camera sits behind your defense, so the CPU's passes come toward the lens: pull it higher and
   // farther back to show the whole secondary, and keep the look point between the camera and the line
   const defense = G.poss === 1 && !G.special && (G.phase === "live" || G.phase === "presnap" || G.phase === "playcall" || G.phase === "dead");
-  const back = portrait ? (live ? 16 : 19) : defense ? (live ? 21 : 19) : (live ? 12.5 : 11.2);
-  const up = portrait ? (live ? 11.5 : 16) : defense ? (live ? 13 : 12) : (live ? 7.6 : 6.8);
+  const near = !portrait && innerHeight < 560 ? .84 : 1;     // sideways phones: pull in so the players read bigger
+  const back = (portrait ? (live ? 16 : 19) : defense ? (live ? 21 : 19) : (live ? 12.5 : 11.2))*near;
+  const up = (portrait ? (live ? 11.5 : 16) : defense ? (live ? 13 : 12) : (live ? 7.6 : 6.8))*near;
   const ahead = defense ? (live ? 4 : 6) : portrait ? (calling ? -6 : live ? 8 : 4) : (calling ? 3 : live ? 9 : 10);
   const k = 1 - Math.exp(-dt*(G.phase === "kick" ? 2.6 : air ? 7.5 : 4.2));
   camFocus.x += (fx - camFocus.x)*k; camFocus.z += (fz*.7 - camFocus.z)*k;
