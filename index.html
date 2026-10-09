@@ -2534,7 +2534,7 @@ function startPresnap(playId, defCall){
   if (off === 0){
     coach("snap", "Snap the ball", i => (i === "touch" ? "Tap <b>SNAP</b>" : i === "pad" ? "Press <kbd>A</kbd>" : "Press <kbd>Space</kbd>") + " to start the play." + (play.kind === "pass" ? " We'll stop again to show you how to throw." : " You'll be the running back."));
   } else {
-    tip("def", "You control the player in the ring. Drag to move, <b>DIVE</b> to tackle, <b>SWITCH</b> to the man nearest the ball. Let go and he plays on his own.");
+    coach("def", "Playing defense", i => `You control the player in the ring. ${i === "touch" ? "Drag to move, tap <b>DIVE</b> to tackle, <b>SWITCH</b> jumps to the man nearest the ball" : i === "pad" ? "Left stick to move, <kbd>A</kbd> to dive, <kbd>LB</kbd> switches to the man nearest the ball" : "<kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> to move, <kbd>Space</kbd> to dive, <kbd>Q</kbd> switches to the man nearest the ball"}. Let go and he plays on his own.`);
     setTimeout(() => { if (G.phase === "presnap" && G.poss === 1) snap(); }, 1100);
   }
 }
@@ -3451,7 +3451,8 @@ function openMeter(kind, cb){
   if (fg) aimMarker(true);
   G.phase = "meter"; setAct("KICK");
   if (fg) coach("fg", "Kicking a field goal", i => `<b>1. Aim:</b> ${i === "touch" ? "drag on the left side" : i === "pad" ? "use the left stick" : "press <kbd>A</kbd>/<kbd>D</kbd> or the arrows"} to slide the yellow marker on the goalposts. Wind pushes the ball, so aim into it.<br><b>2. Power:</b> ${i === "touch" ? "tap" : i === "pad" ? "press <kbd>A</kbd>" : "press <kbd>Space</kbd>"} to start, then again once the bar is past the <b>white line</b> (that's long enough).<br><b>3. Accuracy:</b> once more when the needle is in the <b>green</b>.`);
-  else tip("kick", "Kick meter: tap once to set <b>power</b>, then again when the needle crosses the <b>green</b>.");
+  else if (kind === "punt") coach("punt", "Punting", i => `Fourth down, so flip the field. ${(i === "touch" ? "Tap" : i === "pad" ? "Press <kbd>A</kbd>" : "Press <kbd>Space</kbd>")} once to set <b>power</b> (more power, more distance), then again when the needle is in the <b>green</b> so it doesn't shank out of bounds.`);
+  else coach("kickoff", "Kicking off", i => `${(i === "touch" ? "Tap" : i === "pad" ? "Press <kbd>A</kbd>" : "Press <kbd>Space</kbd>")} once to set <b>power</b>: a full bar booms it deep, maybe for a touchback. Then again when the needle is in the <b>green</b> to keep it straight and in bounds. After the kick, chase down the returner.`);
 }
 let AIM_SPR = null;
 function aimMarker(on){
@@ -3540,7 +3541,8 @@ function startKickoff(kt, spot){
   G.user = kt === 0 ? teams[0].find(p => p.role === "L4") : teams[0].find(p => p.role === "KR");
   hudUpdate();
   if (kt === 0){ openMeter("kickoff", (pw, ac) => launchSpecial(pw, ac)); }
-  else { G.phase = "presnap"; setAct("JUKE"); tip("return", "Kick return: catch it and go. Drag to steer, <b>TURBO</b> to burst, <b>JUKE</b> to make a tackler miss."); setTimeout(() => { if (G.special && G.phase === "presnap") launchSpecial(...cpuKick("kickoff")); }, 1400); }
+  else { G.phase = "presnap"; setAct("JUKE"); coach("return", "Kick return", i => `Your returner catches it on his own. Then ${i === "touch" ? "<b>drag</b> on the left to steer, hold <b>TURBO</b> to burst, tap <b>JUKE</b>" : i === "pad" ? "steer with the <b>left stick</b>, hold <kbd>RT</kbd> to burst, press <kbd>A</kbd> to juke" : "steer with <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd>, hold <kbd>Shift</kbd> to burst, <kbd>Space</kbd> to juke"} when a tackler gets close. Follow your blockers' wall.`,
+    () => setTimeout(() => { if (G.special && G.phase === "presnap") launchSpecial(...cpuKick("kickoff")); }, 1400)); }
 }
 function startPunt(kt){
   $("playcall").hidden = true;
@@ -5514,6 +5516,7 @@ function careerSimDrive(){
 /* ---------- tutorial: a preseason scrimmage ---------- */
 async function careerTutorialGame(){
   ["play","snap","def","aim","kick","return","rotate"].forEach(k => delete G.tipsSeen[k]);
+  Object.keys(G.tipsSeen).filter(k => k.startsWith("c_")).forEach(k => delete G.tipsSeen[k]);   // coach cards pop up again, each when it comes up
   ["slide"].forEach(k => delete G.tipsSeen[k]);
   storyDialog([{who:"coach", name:"Assistant coach", mood:"happy", text:"Quick scrimmage before the opener, Coach. Let me walk you through it."},
                {who:"coach", name:"Assistant coach", text:"Before every snap you pick a play. Runs are safe. Passes show five numbered receivers, 1 through 5, left to right."},
