@@ -161,6 +161,10 @@ h2.step{font-family:var(--display);font-weight:700;font-size:44px;line-height:1;
 #playcall h3{font-family:var(--display);font-size:26px;letter-spacing:.12em;margin:8px 4px 6px;font-weight:600;display:flex;justify-content:space-between;align-items:baseline}
 #playcall h3 span{color:var(--dim);font-size:18px}
 .cards{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;max-width:760px;margin:0 auto}
+b.star{color:#ffd23a;text-shadow:0 0 6px rgba(255,210,58,.6)}
+.pbtabs{display:flex;gap:8px;justify-content:center;margin:0 0 8px}.pbtabs[hidden]{display:none}
+.pbtabs button{font-family:var(--pixh);font-size:18px;padding:4px 18px 1px;border-radius:6px;background:#0b1033;color:#c9d3ff;border:2px solid #5d84ff}
+.pbtabs button[aria-pressed="true"]{background:#ffd23a;color:#0b1033;border-color:#fff}
 .flip{font-size:18px;letter-spacing:.1em;padding:3px 12px 0;border:1px solid #33467e;background:#121b36;transform:skewX(-10deg);margin-left:auto;margin-right:12px}
 .flip[aria-pressed="true"]{background:var(--gold);color:#1a1300;border-color:var(--gold)}
 .card{background:linear-gradient(180deg,#1d2a52,#101831);border:1px solid #33467e;padding:6px 6px 4px;display:flex;flex-direction:column;align-items:stretch;gap:2px;transition:transform .08s}
@@ -434,6 +438,7 @@ button:focus-visible{outline:none}
 
 <div id="playcall" hidden>
   <h3><span id="pcTitle">YOUR BALL</span><button id="flipBtn" class="flip" aria-pressed="false">⇄ FLIP</button><span id="pcSit"></span></h3>
+  <div class="pbtabs" id="pbTabs"></div>
   <div class="cards" id="cards"></div>
 </div>
 
@@ -467,6 +472,8 @@ button:focus-visible{outline:none}
       <button data-v="60">1 MIN</button><button data-v="120" aria-pressed="true">2 MIN</button><button data-v="180">3 MIN</button></div></div>
     <div class="opt"><h3>DIFFICULTY</h3><div class="seg" id="optDiff">
       <button data-v="jv">JV</button><button data-v="varsity" aria-pressed="true">VARSITY</button><button data-v="state">STATE</button></div></div>
+    <div class="opt"><h3>WEATHER</h3><div class="seg" id="optWx">
+      <button data-v="random" aria-pressed="true">RANDOM</button><button data-v="clear">CLEAR</button><button data-v="rain">RAIN</button><button data-v="snow">SNOW</button><button data-v="fog">FOG</button></div></div>
     <div class="opt"><h3>DEFENSE</h3><div class="seg" id="optMode">
       <button data-v="offense" aria-pressed="true">SIMULATED</button><button data-v="both">YOU PLAY IT</button></div></div>
   </div>
@@ -582,7 +589,22 @@ Object.assign(PLAYS, {
   pa:   {name:"PA BOOT", kind:"pass", fake:true, key:"Fake the handoff, roll out, find the drag.",
          routes:{WR1:[[4,0],[6,-10],[7,-28]], WR2:[[14,0],[26,9],[42,12]], WR3:[[12,0],[18,-4],[34,-6]], TE:[[1,0],[3,-6],[5,-16],[6,-24]], HB:[[0,0],[1,-3],[3,-12],[4,-19]]}},
 });
-const OFF_PLAYS = ["run","toss","slants","curls","dig","streaks","post","pa","screen"];
+Object.assign(PLAYS, {
+  draw:  {name:"HB DRAW", kind:"run", draw:true, key:"Show pass, then hand it late. Beats the blitz."},
+  mesh:  {name:"MESH",    kind:"pass", key:"Two shallow crossers rub past each other.",
+          routes:{WR1:[[12,0],[11,-1,"sit"]], WR2:[[14,0],[26,8],[38,11]], WR3:[[2,0],[3,-9],[4,-24]], TE:[[2,0],[3,-8],[4,-22]], HB:[[1,5],[3,11],[4,17]]}},
+  smash: {name:"SMASH",   kind:"pass", key:"Hitches outside, a corner over the top.",
+          routes:{WR1:[[5,0],[4.5,-.5,"sit"]], WR2:[[5,0],[4.5,-.5,"sit"]], WR3:[[12,0],[24,9],[36,12]], TE:[[8,0],[40,-2]], HB:[[1,5],[3,11],[4,17]]}},
+  flood: {name:"FLOOD",   kind:"pass", key:"Three levels to one side: deep, out, flat.",
+          routes:{WR2:[[45,2]], TE:[[10,0],[11,7],[11,14]], HB:[[0,-5],[3,-11],[4,-17]], WR1:[[12,0],[12.5,-10],[13,-24]], WR3:[[8,0],[8.5,-1,"sit"]]}},
+  fade:  {name:"FADE",    kind:"pass", key:"Back-shoulder shots down the sideline.",
+          routes:{WR1:[[3,1],[45,4]], WR2:[[3,1],[45,4]], WR3:[[5,0],[8,-6],[25,-18]], TE:[[5,0],[5.5,-1,"sit"]], HB:[[2,-1],[4,-1,"sit"]]}},
+  seam:  {name:"SEAMS",   kind:"pass", key:"Inside men split the safeties. Outs underneath.",
+          routes:{WR1:[[10,0],[11,8],[11,16]], WR2:[[10,0],[11,8],[11,16]], WR3:[[6,0],[45,1]], TE:[[6,0],[45,-1]], HB:[[2,-1],[4,-1,"sit"]]}},
+});
+const OFF_PLAYS = ["run","toss","draw","screen","slants","curls","mesh","smash","dig","flood","streaks","post","fade","seam","pa"];
+// the playbook is split into tabs so every page fits a phone screen
+const PLAYBOOK = {RUN: ["run","toss","draw","screen","pa"], SHORT: ["slants","curls","mesh","smash","dig"], DEEP: ["flood","streaks","post","fade","seam"]};
 const DEF_CALLS = {
   man:   {name:"MAN",   key:"Corners lock on. Safeties deep."},
   zone:  {name:"ZONE",  key:"Deep thirds. Keep it in front."},
@@ -1381,23 +1403,25 @@ function buildStadium(home, away){
   const hg = new THREE.BufferGeometry(); hg.setAttribute("position", new THREE.Float32BufferAttribute(hp,3)); hg.setAttribute("color", new THREE.Float32BufferAttribute(hc,3));
   stadium.add(new THREE.Mesh(hg, new THREE.MeshBasicMaterial({vertexColors:true, side:THREE.DoubleSide, fog:false})));
   // sky dome with town glow on the horizon, stars, and a moon
-  const sky = new THREE.Mesh(new THREE.SphereGeometry(3500, 32, 16), new THREE.ShaderMaterial({side:THREE.BackSide, depthWrite:false, fog:false,
+  const sky = new THREE.Mesh(new THREE.SphereGeometry(3500, 32, 16), new THREE.ShaderMaterial({side:THREE.BackSide, depthWrite:false, fog:false, uniforms: {dim: {value: 0}},
     vertexShader:"varying vec3 p; void main(){ p = normalize(position); gl_Position = projectionMatrix*modelViewMatrix*vec4(position,1.); }",
     // anime dusk: indigo overhead, violet, then a hot pink-orange band on the horizon with streaky clouds
     // Friday night: deep navy overhead, a last band of dusk and the town's sodium glow on the horizon
-    fragmentShader:`varying vec3 p; void main(){ float h = max(p.y, 0.);
+    fragmentShader:`uniform float dim; varying vec3 p; void main(){ float h = max(p.y, 0.);
       vec3 glow = vec3(.62, .36, .2), hor = vec3(.36, .2, .22), mid = vec3(.12, .08, .2), up = vec3(.035, .04, .1), top = vec3(.008, .01, .035);
       vec3 c = mix(glow, hor, smoothstep(0., .05, h)); c = mix(c, mid, smoothstep(.04, .16, h)); c = mix(c, up, smoothstep(.14, .38, h)); c = mix(c, top, smoothstep(.36, .8, h));
       float a = atan(p.z, p.x), s = sin(a*6. + sin(a*17.)*.6 + h*40.)*.5 + .5;
       float band = smoothstep(.05, .1, h) * (1. - smoothstep(.17, .27, h));
       float cl = smoothstep(.62, .78, s) * band;
       c = mix(c, mix(vec3(.08, .05, .1), vec3(.45, .25, .22), (1. - smoothstep(.06, .14, h))*.6), cl*.5);
+      c = mix(c, vec3(.07, .075, .09) + vec3(.05, .04, .03)*(1. - smoothstep(0., .25, h)), dim);      // overcast
       gl_FragColor = vec4(c, 1.); }`}));
+  sky.name = "sky";
   sky.position.set(50,0,0); stadium.add(sky);
   const sp = []; for (let i=0;i<900;i++){ const a = rnd()*Math.PI*2, e = .1 + rnd()*1.35; sp.push(50+Math.cos(a)*Math.cos(e)*3200, Math.sin(e)*3200, Math.sin(a)*Math.cos(e)*3200); }
   const sg = new THREE.BufferGeometry(); sg.setAttribute("position", new THREE.Float32BufferAttribute(sp,3));
-  stadium.add(new THREE.Points(sg, new THREE.PointsMaterial({color:0xdfe6ff, size:1.1, sizeAttenuation:false, fog:false, transparent:true, opacity:.6, toneMapped:false})));
-  const moon = glowSprite(160, lin("#e6ecff"), .5); moon.position.set(50 + 2200, 1300, -1800); stadium.add(moon);
+  const stars = new THREE.Points(sg, new THREE.PointsMaterial({color:0xdfe6ff, size:1.1, sizeAttenuation:false, fog:false, transparent:true, opacity:.6, toneMapped:false})); stars.name = "stars"; stadium.add(stars);
+  const moon = glowSprite(160, lin("#e6ecff"), .5); moon.position.set(50 + 2200, 1300, -1800); moon.name = "moon"; stadium.add(moon);
 
   // play markers
   dynamic.clear();
@@ -2144,10 +2168,99 @@ function fmtClock(s){ s = Math.max(0, Math.ceil(s)); return `${Math.floor(s/60)}
 
 const venue = () => G.userIsHome === false ? G.away : G.home;       // whose stadium
 const visitor = () => G.userIsHome === false ? G.home : G.away;
+/* ---------- weather nights: rain, snow, fog ----------
+   Picked per game (random by latitude and week, or chosen on the setup screen). Each one changes the look
+   (particles, fog, overcast sky, snow on the turf, lightning) and the football: wet balls slip, snow slows cuts. */
+const WEATHER = {
+  clear: {name: "CLEAR", icon: "☾", drop: 0,   fum: 1,   accel: 1,   speed: 1,   aim: 1},
+  rain:  {name: "RAIN",  icon: "☂", drop: .05, fum: 1.6, accel: .88, speed: .97, aim: .9},
+  snow:  {name: "SNOW",  icon: "❄", drop: .04, fum: 1.35, accel: .82, speed: .93, aim: .92},
+  fog:   {name: "FOG",   icon: "≋", drop: .01, fum: 1,   accel: 1,   speed: 1,   aim: .95},
+};
+const WX = () => WEATHER[G.weather] || WEATHER.clear;
+// north and late in the season means snow; the coast means fog
+function pickWeather(school, week){
+  const lat = (school && school.lat) || 38, wk = week || 4, r = Math.random();
+  const snowP = lat > 37 ? clamp((lat - 37)/12, 0, 1)*clamp((wk - 5)/6, 0, 1)*.45 : 0;
+  if (r < snowP) return "snow";
+  if (r < snowP + .16) return "rain";
+  if (r < snowP + .26) return "fog";
+  return "clear";
+}
+const WXS = {obj: null, kind: "clear", t: 0, flash: 0, nextBolt: 8, sky: null, stars: null, moon: null, snowCover: null, rainGain: null};
+function applyWeather(){
+  const k = G.weather || "clear"; WXS.kind = k;
+  if (WXS.obj){ scene.remove(WXS.obj); WXS.obj.geometry.dispose(); WXS.obj = null; }
+  if (WXS.snowCover){ stadium.remove(WXS.snowCover); WXS.snowCover = null; }
+  WXS.sky = WXS.stars = WXS.moon = null;
+  stadium.traverse(o => { if (o.name === "sky") WXS.sky = o; if (o.name === "stars") WXS.stars = o; if (o.name === "moon") WXS.moon = o; });
+  const over = k !== "clear";
+  if (WXS.sky && WXS.sky.material.uniforms) WXS.sky.material.uniforms.dim.value = k === "fog" ? .9 : over ? .65 : 0;
+  if (WXS.stars) WXS.stars.visible = !over; if (WXS.moon) WXS.moon.visible = !over;
+  const F = {clear: ["#151b2e", 240, 2600], rain: ["#151a24", 70, 520], snow: ["#232a38", 55, 420], fog: ["#5a6274", 4, 62]}[k];
+  scene.fog.color.copy(lin(F[0])); scene.fog.near = F[1]; scene.fog.far = F[2];
+  if (HAZE_MAT) HAZE_MAT.uniforms.op.value = (LITE ? .045 : .07)*(k === "fog" ? 2.2 : k === "rain" ? 1.6 : k === "snow" ? 1.4 : 1);
+  // precipitation: rain is short streaks, snow is soft flakes; both live in a box that follows the camera
+  const N = k === "rain" ? (LITE ? 700 : 1500) : k === "snow" ? (LITE ? 800 : 1800) : 0;
+  if (N){
+    const pos = new Float32Array(N*(k === "rain" ? 6 : 3)), seed = new Float32Array(N);
+    for (let i = 0; i < N; i++){ seed[i] = Math.random(); const x = rand(-30, 30), y = rand(0, 26), z = rand(-30, 30);
+      if (k === "rain"){ pos.set([x, y, z, x + .08, y - .9, z + .05], i*6); } else pos.set([x, y, z], i*3); }
+    const g = new THREE.BufferGeometry(); g.setAttribute("position", new THREE.BufferAttribute(pos, 3)); g.userData.seed = seed;
+    WXS.obj = k === "rain"
+      ? new THREE.LineSegments(g, new THREE.LineBasicMaterial({color: lin("#b8c6e0"), transparent: true, opacity: .42, fog: false, depthWrite: false}))
+      : new THREE.Points(g, new THREE.PointsMaterial({color: 0xffffff, size: .34, map: glowSprite.t || (glowSprite(1, 0xffffff), glowSprite.t), transparent: true, opacity: .9, depthWrite: false, fog: false}));
+    WXS.obj.frustumCulled = false; WXS.obj.renderOrder = 3; scene.add(WXS.obj);
+  }
+  // snow sticks to the field: a white, patchy layer over the turf (the paint still shows through)
+  if (k === "snow"){
+    const c = textCanvas(512, 256), x = c.getContext("2d"), id = x.createImageData(512, 256);
+    for (let i = 0; i < id.data.length; i += 4){ const n = Math.random(); id.data[i] = id.data[i+1] = 245; id.data[i+2] = 255; id.data[i+3] = 120 + n*90; }
+    x.putImageData(id, 0, 0);
+    const t = tex(c, true); t.repeat.set(6, 3);
+    WXS.snowCover = new THREE.Mesh(new THREE.PlaneGeometry(130, 72), new THREE.MeshLambertMaterial({map: t, transparent: true, opacity: .72, depthWrite: false}));
+    WXS.snowCover.rotation.x = -Math.PI/2; WXS.snowCover.position.set(50, .012, 0); WXS.snowCover.renderOrder = 1; stadium.add(WXS.snowCover);
+  }
+  WXS.nextBolt = 6 + Math.random()*10;
+  rainSound(k === "rain");
+}
+function rainSound(on){
+  if (!AC) return;
+  if (!WXS.rainGain){
+    const len = AC.sampleRate*2, b = AC.createBuffer(1, len, AC.sampleRate), d = b.getChannelData(0); for (let i = 0; i < len; i++) d[i] = Math.random()*2 - 1;
+    const s = AC.createBufferSource(); s.buffer = b; s.loop = true;
+    const hp = AC.createBiquadFilter(); hp.type = "highpass"; hp.frequency.value = 900; const lp = AC.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 6000;
+    WXS.rainGain = AC.createGain(); WXS.rainGain.gain.value = 0; s.connect(hp); hp.connect(lp); lp.connect(WXS.rainGain); WXS.rainGain.connect(AC.destination); s.start();
+  }
+  WXS.rainGain.gain.setTargetAtTime(on && sound ? .05 : 0, AC.currentTime, .5);
+}
+function weatherTick(dt){
+  const o = WXS.obj, k = WXS.kind;
+  if (o) o.visible = G.phase !== "menu";
+  if (WXS.rainGain && AC) WXS.rainGain.gain.setTargetAtTime(k === "rain" && sound && G.phase !== "menu" ? .05 : 0, AC.currentTime, .5);
+  if (o && o.visible){
+    o.position.set(camera.position.x, 0, camera.position.z);
+    const p = o.geometry.attributes.position, a = p.array, sd = o.geometry.userData.seed, t = performance.now()/1000;
+    if (k === "rain"){ for (let i = 0; i < a.length; i += 6){ a[i+1] -= 32*dt; a[i+4] -= 32*dt; if (a[i+4] < 0){ const y = 24 + Math.random()*4; a[i+1] = y; a[i+4] = y - .9; } } }
+    else { for (let i = 0, j = 0; i < a.length; i += 3, j++){ a[i+1] -= (1.6 + sd[j])*dt; a[i] += Math.sin(t*.8 + sd[j]*20)*.5*dt; if (a[i+1] < 0) a[i+1] = 24 + Math.random()*3; } }
+    p.needsUpdate = true;
+  }
+  // lightning: a double flash over the stadium, thunder a beat later
+  if (k === "rain" && G.phase !== "menu"){
+    WXS.nextBolt -= dt;
+    if (WXS.nextBolt <= 0){ WXS.nextBolt = 12 + Math.random()*20; WXS.flash = .35;
+      setTimeout(() => { if (!AC || !sound) return; noise(1.8, .5, 140); tone("sine", 50, 30, 1.6, .25); }, 900 + Math.random()*900); }
+  }
+  if (WXS.flash > 0){ WXS.flash -= dt; const on = WXS.flash > .25 || (WXS.flash < .15 && WXS.flash > .08);
+    keyLight.intensity = on ? 4.5 : 2.2; } else if (keyLight.intensity !== 2.2) keyLight.intensity = 2.2;
+}
+
 function startGame(){
   audioInit();
   if (G.userIsHome === undefined) G.userIsHome = true;
   buildStadium(venue(), visitor());
+  if (!G.weather) G.weather = pickWeather(venue(), G.career && G.career.game && G.career.game.week);
+  applyWeather();
   teams.flat().forEach(p => dynamic.remove(p.root));
   teams = [[],[]];
   for (let t=0;t<2;t++) for (let i=0;i<11;i++) teams[t].push(makePlayer(t,i));
@@ -2172,6 +2285,7 @@ function startGame(){
   $("ltMain").textContent = `${visitor().name} at ${venue().name}`;
   const cg = G.career && G.career.game;
   $("ltSub").textContent = cg ? (cg.scrimmage ? "Preseason scrimmage" : cg.round ? cg.round.toLowerCase().replace(/^./, c => c.toUpperCase()) : `Week ${cg.week}${cg.homecoming ? " · Homecoming" : ""}${cg.rivalry ? " · Rivalry game" : ""}`) : `Friday night · ${venue().full || venue().name}`;
+  if (G.weather && G.weather !== "clear") $("ltSub").textContent += ` · ${WX().icon} ${WX().name}`;
   $("hud").hidden = true; $("ctrl").hidden = true;
 }
 
@@ -2220,15 +2334,24 @@ function showPlayCall(){
       add("punt","PUNT","Flip the field. Safe choice.",true,null);
       if (fgDist <= 50) add("fg",`FIELD GOAL`,`${Math.round(fgDist)} yards`,true,null);
     }
-    OFF_PLAYS.forEach(id => add(id, PLAYS[id].name, PLAYS[id].key, false, cv => { drawPlay(cv, id); if (G.flip) cv.style.transform = "scaleX(-1)"; }));
+    // playbook tabs (run / short / deep); open on the one that fits the down and distance
+    if (!G.pbTab || G.pbAuto){ G.pbTab = G.toGo <= 3 ? "RUN" : G.toGo >= 11 ? "DEEP" : "SHORT"; G.pbAuto = true; }
+    const special = [...cards.children];
+    const fill = () => { cards.innerHTML = ""; special.forEach(b => cards.appendChild(b));
+      PLAYBOOK[G.pbTab].forEach(id => add(id, PLAYS[id].name, PLAYS[id].key, false, cv => { drawPlay(cv, id); if (G.flip) cv.style.transform = "scaleX(-1)"; }));
+      [...$("pbTabs").children].forEach(b => b.setAttribute("aria-pressed", b.dataset.t === G.pbTab ? "true" : "false")); };
+    $("pbTabs").innerHTML = Object.keys(PLAYBOOK).map(t => `<button data-t="${t}">${t}</button>`).join("");
+    [...$("pbTabs").children].forEach(b => b.onclick = e => { e.stopPropagation(); G.pbTab = b.dataset.t; G.pbAuto = false; SFX.tick(); fill(); });
+    G.pbFill = fill; $("pbTabs").hidden = false; fill();
   } else {
     pick = id => startPresnap(cpuOffCall(), id);
     const cpu4 = G.down === 4 ? cpuFourth() : null;
     if (cpu4 === "punt" || cpu4 === "fg"){ $("playcall").hidden = true; setTimeout(() => cpu4 === "punt" ? startPunt(1) : startFG(1, false), 400); return; }
+    $("pbTabs").hidden = true;
     Object.entries(DEF_CALLS).forEach(([id, d]) => add(id, d.name, d.key, false, cv => drawDef(cv, id)));
   }
   $("playcall").hidden = false; $("recv").hidden = true; $("switch").hidden = true; setAct(off ? "SNAP" : "DIVE");
-  if (off) coach("play", "Pick a play", i => i === "touch" ? "Tap a card. <b>Run</b> plays hand it to your back; <b>pass</b> plays let you throw." : i === "pad" ? "Move with the <b>D-pad</b>, press <kbd>A</kbd> to pick. <b>Run</b> or <b>pass</b>." : "Click a card or press <kbd>1</kbd>–<kbd>5</kbd>. <b>Run</b> plays hand it off; <b>pass</b> plays let you throw.");
+  if (off) coach("play", "Pick a play", i => i === "touch" ? "Tap a card. <b>Run</b> plays hand it to your back; <b>pass</b> plays let you throw." : i === "pad" ? "Move with the <b>D-pad</b>, press <kbd>A</kbd> to pick. <b>Run</b> or <b>pass</b>." : "Click a card or press <kbd>1</kbd>–<kbd>5</kbd>. Tabs up top (or <kbd>Q</kbd>/<kbd>E</kbd>) switch between <b>Run</b>, <b>Short</b> and <b>Deep</b> plays.");
 }
 
 function drawPlay(cv, id){
@@ -2240,7 +2363,7 @@ function drawPlay(cv, id){
   const starts = {WR1:[-.8,-15], WR3:[-1.6,-8.5], HB:[-5.5,-1.6], TE:[-1.1,4.4], WR2:[-.8,15]};
   if (play.kind === "run"){
     const [a,b] = P(-5.5,-2); x.strokeStyle = col.HB; x.lineWidth=3; x.beginPath(); x.moveTo(a,b);
-    const pts = play.toss ? [[-3,-9],[9,-11]] : [[-1,3.2],[9,3.6]];
+    const pts = play.toss ? [[-3,-9],[9,-11]] : play.draw ? [[-6.5,-.8],[9,.6]] : [[-1,3.2],[9,3.6]];
     const [c,d] = P(...pts[0]); x.lineTo(c,d); const [e,f] = P(...pts[1]); x.lineTo(e,f); x.stroke(); arrow(x,c,d,e,f,col.HB);
     if (play.toss){ x.setLineDash([4,4]); x.strokeStyle = "#fff"; x.lineWidth = 2; x.beginPath(); const [q1,q2] = P(-5,0); x.moveTo(q1,q2); x.lineTo(c,d); x.stroke(); x.setLineDash([]); }
   } else Object.entries(play.routes).forEach(([r, wps]) => {
@@ -2273,8 +2396,8 @@ function cpuDefCall(){
 }
 function cpuOffCall(){
   const runP = G.toGo <= 3 ? .55 : G.toGo >= 8 ? .2 : .4;
-  if (Math.random() < runP) return Math.random() < .35 ? "toss" : "run";
-  const passes = G.toGo >= 12 ? ["streaks","post","curls","post","dig"] : ["slants","curls","streaks","post","screen","slants","dig","pa"];
+  if (Math.random() < runP){ const r = Math.random(); return r < .3 ? "toss" : r < .45 ? "draw" : "run"; }
+  const passes = G.toGo >= 12 ? ["streaks","post","curls","post","dig","fade","seam","flood"] : ["slants","curls","streaks","post","screen","slants","dig","pa","mesh","smash","flood"];
   return passes[Math.floor(Math.random()*passes.length)];
 }
 function cpuFourth(){
@@ -2312,7 +2435,7 @@ function placeFormation(playId, defCall, preview=false){
   spot(D[9], blitz ? 13 : 12, clamp(bz + L*8, -20, 20), "S1");
   spot(D[10], blitz ? 7 : 12, clamp(bz - L*(blitz ? 6 : 8), -20, 20), "S2");
 
-  for (const p of [...O, ...D]){ p.ovr = ratingFor(p.team, p.role); p.maxSpeed = BASE_SPEED[p.role] * spdF(p); p.accel = ACCEL(p.role); }
+  for (const p of [...O, ...D]){ p.ovr = ratingFor(p.team, p.role); applyStar(p); p.maxSpeed = BASE_SPEED[p.role] * spdF(p) * WX().speed; p.accel = ACCEL(p.role); }
   G.ball = {x: los - .4*d, z: bz, y: .2, held: O[1], air: null};
   if (preview) G.user = G.poss === 0 ? O[0] : D[4];
   syncMeshes(0);
@@ -2416,7 +2539,7 @@ function snap(){
 // A hard cut against your momentum means planting and braking first, like a real athlete.
 const ACCEL = r => LINEMEN.has(r) ? 10.5 : (r === "QB" || r === "K" || r === "P" || r === "H") ? 13 : 15.5;
 function accelTo(p, vx, vz, dt){
-  const sp = Math.hypot(p.vx, p.vz), ts = Math.hypot(vx, vz), a = p.accel || 15;
+  const sp = Math.hypot(p.vx, p.vz), ts = Math.hypot(vx, vz), a = (p.accel || 15)*WX().accel;
   const top = Math.max(1, p.maxSpeed), frac = Math.min(1.3, sp/top);
   if (sp < .35){ // from a standstill: go straight toward the target direction
     if (ts < .01){ p.vx *= Math.max(0, 1 - 10*dt); p.vz *= Math.max(0, 1 - 10*dt); return; }
@@ -2480,11 +2603,37 @@ function ratingFor(team, role){
   let h = 7; for (const ch of role + ((sch && sch.key) || "")) h = (h*31 + ch.charCodeAt(0)) % 9973;
   return clamp(base + (h % 15) - 7, 35, 97);
 }
+// ★ star players: in Coach Mode anyone rated 84+; otherwise each team has two stars at skill spots (picked from
+// the school's name so they stay the same every game). Stars play about 9 points better and wear a gold star.
+const STAR_OVR = 84, STAR_ROLES = ["QB","HB","WR1","WR2","TE","LB","CB1","S1","DE1","WR3"];
+function starFor(team, role){
+  const cp = team === 0 && G.career && G.career.mods.players && G.career.mods.players[role];
+  if (cp) return cp.ovr >= STAR_OVR;
+  const sch = team === 0 ? G.home : G.away; let h = 11; for (const ch of ((sch && sch.key) || "x") + "star") h = (h*33 + ch.charCodeAt(0)) % 99991;
+  const n = G.career && team === 1 ? (G.career.game.opp.rating >= 78 ? 3 : G.career.game.opp.rating >= 66 ? 2 : 1) : 2;
+  const picks = []; for (let k = 0; picks.length < n && k < 20; k++){ const r = STAR_ROLES[(h + k*7) % STAR_ROLES.length]; if (!picks.includes(r)) picks.push(r); }
+  return picks.includes(role);
+}
+let STAR_TEX = null;
+function starBadge(p){
+  if (!STAR_TEX){ const c = textCanvas(64, 64), x = c.getContext("2d"); x.beginPath();
+    for (let i = 0; i < 10; i++){ const a = -Math.PI/2 + i*Math.PI/5, r = i % 2 ? 12 : 27; x.lineTo(32 + Math.cos(a)*r, 32 + Math.sin(a)*r); }
+    x.closePath(); x.fillStyle = "#ffd23a"; x.fill(); x.lineWidth = 5; x.strokeStyle = "#2a1600"; x.stroke(); STAR_TEX = new THREE.CanvasTexture(c); }
+  if (!p.starSpr){ p.starSpr = new THREE.Sprite(new THREE.SpriteMaterial({map: STAR_TEX, depthTest: false, transparent: true, toneMapped: false}));
+    p.starSpr.scale.set(.55, .55, 1); p.starSpr.renderOrder = 9; p.starSpr.position.y = 2.55; p.root.add(p.starSpr); }
+  return p.starSpr;
+}
+function applyStar(p){
+  p.star = starFor(p.team, p.role);
+  const careerStar = p.team === 0 && G.career && G.career.mods.players && G.career.mods.players[p.role];
+  if (p.star && !careerStar) p.ovr = Math.min(99, p.ovr + 9);
+  if (p.star) starBadge(p); if (p.starSpr) p.starSpr.visible = !!p.star;
+}
 const RAT = p => (p && p.ovr) || 70;
 const spdF = p => (.9 + (RAT(p) - 50)*.004) * (p.team === 0 && G.career ? G.career.mods.fit : 1);
 const CHEM = () => G.career ? G.career.mods.chem : 50;
 // your QB's timing window grows with his rating and the team's chemistry
-const aimWin = () => AIM_WINDOW * clamp(1 + (RAT(G.carrier) - 70)*.006 + (CHEM() - 50)*.004, .75, 1.4);
+const aimWin = () => AIM_WINDOW * WX().aim * clamp(1 + (RAT(G.carrier) - 70)*.006 + (CHEM() - 50)*.004, .75, 1.4);
 function startAim(i){
   if (G.phase !== "live" || G.poss !== 0 || !G.carrier || G.carrier.role !== "QB" || G.sub !== "pre" || G.windup || G.aim || !G.targets) return;
   if (!G.targets[i]) return;
@@ -2546,7 +2695,7 @@ function resolveCatch(){
     }
     // drops: sure hands catch almost everything, a stretch at the edge of his reach is harder,
     // and the CPU's receivers are a little shakier than your coached-up guys
-    const drop = clamp(.06 - (RAT(rc) - 70)*.004 + (dr/reachR)*.1 + (rc.team === 1 ? .12 : 0), .02, .35);
+    const drop = clamp(.06 - (RAT(rc) - 70)*.004 + (dr/reachR)*.1 + (rc.team === 1 ? .12 : 0) + WX().drop, .02, .4);
     if (r < drop) { banner("DROPPED", ""); return endPlay({type:"inc"}); }
     return catchIt();
   }
@@ -2596,7 +2745,7 @@ function update(dt){
   }
 
   // handoff
-  if (play.kind === "run" && G.sub === "pre" && G.playT > (play.toss ? .28 : .42)){
+  if (play.kind === "run" && G.sub === "pre" && G.playT > (play.toss ? .28 : play.draw ? 1.05 : .42)){
     const hb = teams[off].find(p => p.role === "HB"), qb = teams[off].find(p => p.role === "QB");
     if (play.toss){ // underhand pitch out to the back
       const side = Math.sign(hb.z - G.ballZ) || 1, T = .36, tx = hb.x + hb.vx*T, tz = hb.z + hb.vz*T + side*2.2;   // lead him toward the edge
@@ -2756,7 +2905,9 @@ function think(p, dt, uv){
     }
     if (p.role === "HB" && pl.kind === "run"){
       const L = -d * (G.flip && off === 0 ? -1 : 1);       // power: hit the off-tackle hole on the tight end's side
-      if (pl.toss) steer(p, G.los - 1.5*d, G.ballZ + hbSide*10.5, mul*1.05, dt, .2); else steer(p, G.los + 2*d, G.ballZ - L*3.2, mul, dt);
+      if (pl.toss) steer(p, G.los - 1.5*d, G.ballZ + hbSide*10.5, mul*1.05, dt, .2);
+      else if (pl.draw && G.playT < 1.05) steer(p, G.los - 4.8*d, G.ballZ + hbSide*.9, .45, dt, .3);    // sells pass pro beside the QB
+      else steer(p, G.los + 2*d, G.ballZ - L*3.2, mul, dt);
       return;
     }
     if (PLAYS[G.offPlay].kind === "run"){ blockAI(p, dt, mul, retarget); return; }
@@ -2779,7 +2930,7 @@ function think(p, dt, uv){
   if (pl.fake && G.playT < .6 && p.role === "LB"){ // the linebacker bites on the play fake
     const hb = teams[off].find(x => x.role === "HB"); steer(p, hb.x + d*1.5, hb.z, mul*.85, dt, .3); return;
   }
-  if (runPlay && G.playT > (pl.toss ? .9 : .55) && carrier){ // read run, come downhill (a toss holds them a beat)
+  if (runPlay && G.playT > (pl.toss ? .9 : pl.draw ? 1.4 : .55) && carrier){ // read run, come downhill (a toss holds them a beat)
     if (retarget){ const ip = interceptPoint(p, carrier, 1.2); p.tx = ip.x; p.tz = ip.z; }
     steer(p, p.tx, p.tz, mul, dt, .05); return;
   }
@@ -3053,7 +3204,7 @@ function carrierChecks(dt){
     const armOnly = e.engaged && e.dive <= 0;                // still locked with a blocker: one arm free
     if (Math.random() < tackleProb(e, c)*(armOnly ? .3 : 1)){
       const impact = Math.hypot(c.vx - e.vx, c.vz - e.vz);
-      const fumbleOdds = .035 * (G.career && c.team === 0 && CAR ? (CAR.morale < 35 ? 1.8 : CAR.morale > 75 ? .6 : 1) * (CAR.flags.ballSecurity === CAR.week ? .4 : 1) : 1);
+      const fumbleOdds = .035 * WX().fum * (G.career && c.team === 0 && CAR ? (CAR.morale < 35 ? 1.8 : CAR.morale > 75 ? .6 : 1) * (CAR.flags.ballSecurity === CAR.week ? .4 : 1) : 1);
       // a quarterback running in the open isn't built to take hits: about a 30% fumble unless he slides
       const qbRun = c.role === "QB" && G.sub === "run" && !G.special;
       if (!G.special && !G.twoPt && ((qbRun && impact > 2.5 && Math.random() < .3*clamp(1 - (RAT(c) - 70)*.015, .6, 1.4)) ||
@@ -3297,7 +3448,7 @@ function cpuKick(kind){
 function putSpecial(p, x, z, role, kt){
   setRole(p, role); resetState(p); p.fx = undefined; p.placed = true;
   Object.assign(p, {x, z, vx:0, vz:0, laneZ:z, homeZ:z, face: Math.atan2(dirOf(kt)*(p.team === kt ? 1 : -1), 0)});
-  p.ovr = ratingFor(p.team, role); p.maxSpeed = speedFor(role) * spdF(p); p.accel = ACCEL(role);
+  p.ovr = ratingFor(p.team, role); applyStar(p); p.maxSpeed = speedFor(role) * spdF(p); p.accel = ACCEL(role);
 }
 function layoutSpecial(kind, kt){
   const d = dirOf(kt), K = teams[kt], R = teams[1-kt], los = G.los, bz = G.ballZ;
@@ -4974,7 +5125,7 @@ function openOffice(tab){
     const st = new Set(starters());
     ["QB","RB","WR","TE","OL","DL","LB","DB","K"].forEach(pos => {
       CAR.roster.filter(p => p.pos === pos).sort((a,b) => b.ovr - a.ovr).forEach(p => {
-        const flags = [p.inj > 0 ? `<b class="bad">INJ ${p.inj}w</b>` : "", p.susp > 0 ? `<b class="bad">SUSP</b>` : "", p.gpa < 2 && p.trait !== "Scholar" ? `<b class="bad">INELIGIBLE</b>` : "", st.has(p) ? `<b class="ok">STARTER</b>` : ""].join(" ");
+        const flags = [p.inj > 0 ? `<b class="bad">INJ ${p.inj}w</b>` : "", p.susp > 0 ? `<b class="bad">SUSP</b>` : "", p.gpa < 2 && p.trait !== "Scholar" ? `<b class="bad">INELIGIBLE</b>` : "", st.has(p) ? `<b class="ok">STARTER</b>` : "", p.ovr >= STAR_OVR ? `<b class="star">★ STAR</b>` : ""].join(" ");
         const row = h(`<button class="prow"><span class="pnum">${p.num}</span><span class="pmain"><b>${p.first} ${p.last}</b><small>${p.pos} · ${["FR","SO","JR","SR"][p.grade-9]} · GPA ${p.gpa.toFixed(1)}${p.trait ? " · " + p.trait : ""}</small></span><span class="pst">${starStr(stars(p.ovr))}<small>${p.ovr} OVR · POT ${starStr(stars(p.pot)).replace(/☆/g,"")}</small></span><span class="pfl">${flags}</span></button>`);
         row.querySelector("button").onclick = () => {
           if (CAR.points < 1){ banner("NO COACH POINTS", "Win games to earn more"); return; }
@@ -5044,7 +5195,7 @@ async function playCareerGame(ng){
   const me = st.all.find(s => s.key === S.key) || Object.assign({}, S);
   const them = (await loadState(opp.state)).all.find(s => s.key === opp.key) || Object.assign({}, opp);
   await Promise.all([loadStadium(ng.home ? me : them), loadRig()]);
-  G.home = me; G.away = them; G.userIsHome = ng.home;
+  G.home = me; G.away = them; G.userIsHome = ng.home; G.weather = pickWeather(ng.home ? me : them, ng.week);
   G.career = {game: ng, mods: teamMods(), oppSkill: clamp((opp.rating - teamOvr())/60, -.25, .3)};
   G.qLen = CAR.settings.qLen; G.diff = Object.assign({}, DIFF[CAR.settings.diff]);
   if (ng.homecoming && ng.home) crowdTo(1);
@@ -5327,7 +5478,7 @@ async function careerTutorialGame(){
     await Promise.all([loadStadium(me), loadRig()]);
     G.home = me; G.away = jv; G.userIsHome = true;
     G.career = {game: {week: 0, scrimmage: true, opp: jv, home: true}, mods: teamMods(), oppSkill: -.25};
-    G.qLen = 120; G.diff = Object.assign({}, DIFF.jv); G.tutorialGame = true;
+    G.qLen = 120; G.diff = Object.assign({}, DIFF.jv); G.tutorialGame = true; G.weather = "clear";
     startGame();
   }));
 }
@@ -5522,6 +5673,7 @@ segBind("optLen", v => G.qLen = +v);
 segBind("optDiff", v => G.diff = DIFF[v]);
 G.quickMode = "offense";                     // quick games start offense-only (defense simulated), like the career default
 segBind("optMode", v => G.quickMode = v);
+G.wxPick = "random"; segBind("optWx", v => G.wxPick = v);
 
 $("playBtn").addEventListener("click", () => { audioInit(); SFX.tick(); G.pickingFor = "quick"; pickState.step = 0; renderPick(); showScreen("pick"); });
 $("careerBtn").addEventListener("click", () => { audioInit(); SFX.tick(); openCareerMenu(); });
@@ -5531,7 +5683,7 @@ $("flipBtn").addEventListener("click", () => { G.flip = !G.flip; $("flipBtn").se
 $("pickSearch").addEventListener("input", e => { pickState.q = e.target.value; renderPick(); });
 $("setupBack").addEventListener("click", () => { pickState.step = 3; renderPick(); showScreen("pick"); });
 $("kickBtn").addEventListener("click", async () => {
-  G.userIsHome = true; G.career = null;
+  G.userIsHome = true; G.career = null; G.weather = G.wxPick === "random" ? null : G.wxPick;
   audioInit(); const b = $("kickBtn"); if (b.disabled) return; b.disabled = true; b.textContent = "LOADING FIELD…";
   await Promise.all([loadStadium(G.home), loadRig()]); b.disabled = false; b.textContent = "KICKOFF";
   if (!G.tipsSeen.howto) showHowto(startGame); else startGame();      // first game: the controls card first
@@ -5618,6 +5770,9 @@ addEventListener("keydown", e => {
   if (["Digit1","Digit2","Digit3","Digit4","Digit5"].includes(e.code) && !e.repeat) startAim(+e.code.slice(-1)-1);
   if (e.code === "Escape"){ if (G.paused){ G.paused = false; showScreen(null); } else if (G.phase !== "final"){ G.paused = true; showScreen("pause"); } }
   if (G.phase === "playcall" && /^Digit[1-9]$/.test(e.code)){ const c = $("cards").children[+e.code.slice(-1)-1]; if (c) c.click(); }
+  if (G.phase === "playcall" && G.poss === 0 && ["KeyQ","KeyE","BracketLeft","BracketRight"].includes(e.code) && G.pbFill){   // flip playbook tabs
+    const ks = Object.keys(PLAYBOOK), i = ks.indexOf(G.pbTab), step = e.code === "KeyQ" || e.code === "BracketLeft" ? -1 : 1;
+    G.pbTab = ks[(i + step + ks.length) % ks.length]; G.pbAuto = false; SFX.tick(); G.pbFill(); }
   if (e.code.startsWith("Arrow")) e.preventDefault();
 });
 addEventListener("keyup", e => { input.keys[e.code] = false; if (G.aim && e.code === `Digit${G.aim.i+1}`) releaseAim(); if (e.code.startsWith("Shift")) input.turbo = false; });
@@ -5857,6 +6012,10 @@ function frame(now){
     sbT -= dt; if (sbT <= 0){ sbT = .25; drawScoreboard(); hudUpdate(); }
   }
   updateCamera(dt);
+  weatherTick(realDt);
+  // gold stars float over the stars before the snap and over whoever has the ball
+  { const pre = ["presnap","playcall","between","dead"].includes(G.phase), air = G.ball && G.ball.air;
+    for (const t of teams) for (const p of t) if (p.starSpr) p.starSpr.visible = !!p.star && (pre || G.carrier === p || (air && air.target === p)); }
   toonLights();
   // the scene renders into whichever target is "read" this frame; the ink pass must sample that target's depth
   if (inkPass) inkPass.uniforms.tDepth.value = composer.readBuffer.depthTexture;
@@ -5864,7 +6023,7 @@ function frame(now){
 }
 // title screen backdrop: a real Marin field spinning behind the menu
 loadRig();
-function backdrop(){ G.home = SCHOOLS[3]; G.away = SCHOOLS[6]; buildStadium(G.home, G.away); G.home = null; G.away = null; }
+function backdrop(){ G.home = SCHOOLS[3]; G.away = SCHOOLS[6]; buildStadium(G.home, G.away); G.weather = "clear"; applyWeather(); G.weather = null; G.home = null; G.away = null; }
 const fontsReady = Promise.race([Promise.all(["400 40px Graduate","700 40px Teko","600 20px 'Barlow Semi Condensed'"].map(f => document.fonts.load(f))), new Promise(r => setTimeout(r, 2500))]).catch(()=>{});
 Promise.all([fontsReady, Promise.race([RIG.loading, new Promise(r => setTimeout(r, 4000))])]).then(backdrop);
 requestAnimationFrame(frame);
