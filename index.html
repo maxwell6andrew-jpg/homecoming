@@ -718,7 +718,7 @@ function openPro(why, after){
     B.innerHTML = (why && why !== "key" ? `<p class="psm" style="font-size:15px;color:#dfe6ff;margin:0 0 6px">This is a Homecoming Pro feature. $4.99 once, not a subscription.</p>` : `<p class="psm" style="font-size:15px;color:#dfe6ff;margin:0 0 6px">Support a one-person game and get:</p>`) + proPerks() +
       `<div class="abtn"><button class="big" id="proBuy"${PRO.live || PRO.allowTest() ? "" : " disabled"}>${PRO.live || PRO.allowTest() ? "BUY PRO · $4.99" : "PRO · COMING SOON"}</button><button class="ghost" id="proX">NOT NOW</button></div>` +
       `<div class="pk"><input id="proKey" placeholder="Paste your license key" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="License key"><button class="ghost" id="proAct">UNLOCK</button></div><div class="pmsg" id="proMsg" aria-live="polite"></div>` +
-      `<p class="psm">Checkout by Lemon Squeezy. Your key arrives by email. 14-day no-questions refund. <a href="${PRO.page}" target="_blank" rel="noopener">Pro &amp; refunds</a></p>`;
+      `<p class="psm">Checkout by Lemon Squeezy. Your key arrives by email. Sales are final once you unlock Pro. <a href="${PRO.page}" target="_blank" rel="noopener">Pro &amp; refunds</a></p>`;
     B.querySelector("#proBuy").onclick = () => { SFX.tick(); window.open(PRO.checkout, "_blank", "noopener"); const m = $("proMsg"); m.className = "pmsg"; m.textContent = "Checkout opened in a new tab. Paste your key here when you're done."; };
     const act = async () => {
       const m = $("proMsg"), btn = B.querySelector("#proAct"); m.className = "pmsg"; m.textContent = "Checking your key…"; btn.disabled = true;
