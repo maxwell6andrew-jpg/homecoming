@@ -153,7 +153,9 @@ h2.step{font-family:var(--display);font-weight:700;font-size:44px;line-height:1;
 #mLabel{font-family:var(--display);font-size:24px;letter-spacing:.12em;text-align:center;color:#fff;text-shadow:0 2px 0 #000;margin-bottom:4px}
 .mbar{position:relative;height:28px;background:linear-gradient(180deg,#0c1224,#1d2747);border:2px solid #000;box-shadow:0 0 0 2px rgba(255,255,255,.25),0 8px 20px rgba(0,0,0,.5);overflow:hidden}
 #mFill{position:absolute;inset:0;transform-origin:left;transform:scaleX(0);background:linear-gradient(90deg,#3d8bff,#ffd23a 70%,#ff4d2e)}
-.mzone{position:absolute;top:0;bottom:0;left:44%;width:12%;background:rgba(56,224,123,.55);box-shadow:inset 0 0 0 2px #38e07b}
+.mzone{position:absolute;top:0;bottom:0;left:41%;width:18%;background:rgba(56,224,123,.55);box-shadow:inset 0 0 0 2px #38e07b}
+#mNeed{position:absolute;top:-2px;bottom:-2px;width:3px;margin-left:-1px;background:#fff;opacity:.85;display:none}
+#mWind{text-align:center;font-family:var(--pixh);font-size:15px;color:#bfe0ff;text-shadow:0 2px 0 #000;margin:-2px 0 4px;min-height:1em}
 #mNeedle{position:absolute;top:-4px;bottom:-4px;width:5px;margin-left:-2px;background:#fff;box-shadow:0 0 8px #fff;left:0;opacity:0}
 
 /* Play call */
@@ -422,7 +424,7 @@ button:focus-visible{outline:none}
 <div id="padHint" hidden></div>
 <div id="tip" style="opacity:0"></div>
 <div id="lower" hidden><div class="lt-top" id="ltTop"></div><div class="lt-main" id="ltMain"></div><div class="lt-sub" id="ltSub"></div><div class="lt-skip">TAP TO SKIP</div></div>
-<div id="meter" hidden><div id="mLabel">TAP FOR POWER</div><div class="mbar"><i id="mFill"></i><b class="mzone"></b><span id="mNeedle"></span></div></div>
+<div id="meter" hidden><div id="mLabel">TAP FOR POWER</div><div id="mWind"></div><div class="mbar"><i id="mFill"></i><b class="mzone"></b><em id="mNeed"></em><span id="mNeedle"></span></div></div>
 
 <div id="ctrl" hidden>
   <div id="stick"><div id="knob"></div></div>
@@ -2284,6 +2286,7 @@ function startGame(){
   buildStadium(venue(), visitor());
   if (!G.weather) G.weather = pickWeather(venue(), G.career && G.career.game && G.career.game.week);
   applyWeather();
+  G.wind = (Math.random() < .5 ? -1 : 1) * (G.weather === "rain" || G.weather === "snow" ? rand(3, 14) : G.weather === "fog" ? rand(0, 4) : rand(0, 8));
   teams.flat().forEach(p => dynamic.remove(p.root));
   teams = [[],[]];
   for (let t=0;t<2;t++) for (let i=0;i<11;i++) teams[t].push(makePlayer(t,i));
@@ -3113,11 +3116,11 @@ function doJuke(p, side){
 /* ---------- controls card: every input, for the device you're on ---------- */
 const HOWTO = {
   touch: [["Move", "Drag anywhere on the left half"], ["Snap · Juke · Dive · Slide", "The big green button (its label changes with the moment)"], ["Turbo", "Hold the orange button (it drains, then refills)"],
-    ["Throw", "<b>Hold</b> a number 1–5 (or press on the receiver), <b>let go when his ring turns green</b>"], ["Switch defender", "Blue SWITCH button"], ["Kicks", "Tap once for power, again when the needle hits green"]],
+    ["Throw", "<b>Hold</b> a number 1–5 (or press on the receiver), <b>let go when his ring turns green</b>"], ["Switch defender", "Blue SWITCH button"], ["Field goals", "Drag on the left to <b>aim</b> (mind the wind), tap to start, tap past the white line for <b>power</b>, tap in the <b>green</b>"]],
   keys: [["Move", "<kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> or arrows"], ["Snap · Juke · Dive · Slide", "<kbd>Space</kbd>"], ["Turbo", "Hold <kbd>Shift</kbd>"],
-    ["Throw", "<b>Click and hold a receiver</b> (or hold <kbd>1</kbd>–<kbd>5</kbd>), <b>let go when the ring turns green</b>"], ["Switch defender", "<kbd>Q</kbd>"], ["Pause · Full screen", "<kbd>Esc</kbd> · <kbd>F</kbd>"]],
+    ["Throw", "<b>Click and hold a receiver</b> (or hold <kbd>1</kbd>–<kbd>5</kbd>), <b>let go when the ring turns green</b>"], ["Switch defender", "<kbd>Q</kbd>"], ["Field goals", "<kbd>A</kbd>/<kbd>D</kbd> to <b>aim</b> (mind the wind), <kbd>Space</kbd> to start, again past the white line, again in the green"], ["Pause · Full screen", "<kbd>Esc</kbd> · <kbd>F</kbd>"]],
   pad: [["Move", "Left stick or d-pad"], ["Snap · Juke · Dive · Slide", "<kbd>A</kbd>"], ["Turbo", "Hold <kbd>RT</kbd>"],
-    ["Throw", "<b>Hold</b> <kbd>X</kbd> <kbd>Y</kbd> <kbd>B</kbd> <kbd>LB</kbd> <kbd>LT</kbd> for receivers 1–5, <b>release on green</b>"], ["Switch defender", "<kbd>LB</kbd> (on defense)"], ["Pause", "<kbd>Start</kbd>"]],
+    ["Throw", "<b>Hold</b> <kbd>X</kbd> <kbd>Y</kbd> <kbd>B</kbd> <kbd>LB</kbd> <kbd>LT</kbd> for receivers 1–5, <b>release on green</b>"], ["Switch defender", "<kbd>LB</kbd> (on defense)"], ["Field goals", "Left stick to <b>aim</b>, <kbd>A</kbd> to start, again past the white line, again in the green"], ["Pause", "<kbd>Start</kbd>"]],
 };
 const HOWTO_TIPS = ["The line holds about three seconds. Find your man before the edge rusher gets home.",
   "Receivers come open coming out of their cuts. Throw on the break, not before.",
@@ -3434,28 +3437,48 @@ const speedFor = role => BASE_SPEED[role] || 7.2;
 const teamName = t => t === 0 ? G.home.name : G.away.name;
 
 // two-tap kick meter: first tap sets power, second tap stops the accuracy needle
-const meter = {on:false, stage:0, t:0, power:0, acc:0, cb:null};
+// field goals and PATs get an aim step first (old-Madden style): steer the marker on the uprights, wind pushes the ball
+const meter = {on:false, stage:0, t:0, power:0, acc:0, aim:0, cb:null};
+const windText = () => !G.wind || Math.abs(G.wind) < .5 ? "NO WIND" : `WIND ${Math.round(Math.abs(G.wind))} MPH ${G.wind > 0 ? "▶" : "◀"}`;
 function openMeter(kind, cb){
-  Object.assign(meter, {on:true, stage:0, t:0, power:0, acc:0, cb, kind});
-  $("meter").hidden = false; $("mLabel").textContent = "TAP FOR POWER"; $("mNeedle").style.opacity = 0;
+  const fg = kind === "fg" || kind === "pat";
+  Object.assign(meter, {on:true, stage: fg ? -1 : 0, t:0, power:0, acc:0, aim:0, cb, kind});
+  $("meter").hidden = false; $("mNeedle").style.opacity = 0; $("mFill").style.transform = "scaleX(0)";
+  $("mLabel").textContent = fg ? (usingTouch ? "DRAG TO AIM · TAP TO KICK" : usingPad ? "STICK TO AIM · A TO KICK" : "◀ ▶ AIM · SPACE TO KICK") : "TAP FOR POWER";
+  $("mWind").textContent = fg ? windText() : "";
+  const need = fg ? clamp((distToGoal(G.fg.team, G.los) + 17 - 30)/32, 0, 1) : 0;
+  $("mNeed").style.display = fg ? "block" : "none"; $("mNeed").style.left = `${need*100}%`;
+  if (fg) aimMarker(true);
   G.phase = "meter"; setAct("KICK");
-  tip("kick", "Kick meter: tap once to set <b>power</b>, then again when the needle crosses the <b>green</b>.");
+  if (fg) coach("fg", "Kicking a field goal", i => `<b>1. Aim:</b> ${i === "touch" ? "drag on the left side" : i === "pad" ? "use the left stick" : "press <kbd>A</kbd>/<kbd>D</kbd> or the arrows"} to slide the yellow marker on the goalposts. Wind pushes the ball, so aim into it.<br><b>2. Power:</b> ${i === "touch" ? "tap" : i === "pad" ? "press <kbd>A</kbd>" : "press <kbd>Space</kbd>"} to start, then again once the bar is past the <b>white line</b> (that's long enough).<br><b>3. Accuracy:</b> once more when the needle is in the <b>green</b>.`);
+  else tip("kick", "Kick meter: tap once to set <b>power</b>, then again when the needle crosses the <b>green</b>.");
+}
+let AIM_SPR = null;
+function aimMarker(on){
+  if (!AIM_SPR){ const c = textCanvas(128, 128), x = c.getContext("2d"); x.lineWidth = 12; x.strokeStyle = "#ffd23a"; x.beginPath(); x.arc(64, 64, 46, 0, 7); x.stroke();
+    x.lineWidth = 6; x.beginPath(); x.moveTo(64, 0); x.lineTo(64, 34); x.moveTo(64, 94); x.lineTo(64, 128); x.moveTo(0, 64); x.lineTo(34, 64); x.moveTo(94, 64); x.lineTo(128, 64); x.stroke();
+    AIM_SPR = new THREE.Sprite(new THREE.SpriteMaterial({map: new THREE.CanvasTexture(c), depthTest: false, transparent: true, toneMapped: false})); AIM_SPR.scale.set(2.4, 2.4, 1); AIM_SPR.renderOrder = 12; dynamic.add(AIM_SPR); }
+  AIM_SPR.visible = on;
+  if (on && G.fg){ const gx = G.fg.team === 0 ? 110 : -10; AIM_SPR.position.set(gx, 4.6, meter.aim); }
 }
 function meterTap(){
   if (!meter.on) return;
+  if (meter.stage === -1){ meter.stage = 0; meter.t = 0; $("mLabel").textContent = "TAP FOR POWER"; SFX.tick(); return; }
   if (meter.stage === 0){ meter.stage = 1; meter.t = 0; $("mLabel").textContent = "TAP IN THE GREEN"; $("mNeedle").style.opacity = 1; SFX.tick(); }
   else closeMeter(meter.acc);
 }
 function closeMeter(acc){
   meter.on = false; meter.acc = clamp(acc, -1, 1); $("meter").hidden = true; SFX.tick();
-  const cb = meter.cb; meter.cb = null; if (cb) cb(meter.power, meter.acc);
+  aimMarker(false);
+  const cb = meter.cb; meter.cb = null; if (cb) cb(meter.power, meter.acc, meter.aim);
 }
 function updateMeter(dt){
   if (!meter.on) return;
   meter.t += dt;
-  if (meter.stage === 0){ const u = (meter.t / 1.25) % 2; meter.power = u < 1 ? u : 2 - u; $("mFill").style.transform = `scaleX(${meter.power})`; }
+  if (meter.stage === -1){ const uv = userVector(); meter.aim = clamp(meter.aim + uv.fz*dirOf(G.fg ? G.fg.team : 0)*dt*7, -9, 9); aimMarker(true); return; }
+  if (meter.stage === 0){ const u = (meter.t / 1.45) % 2; meter.power = u < 1 ? u : 2 - u; $("mFill").style.transform = `scaleX(${meter.power})`; }
   else {
-    meter.acc = -1 + meter.t / .38;          // needle sweeps left to right in under a second
+    meter.acc = -1 + meter.t / .55;          // needle sweeps left to right in about a second
     $("mNeedle").style.left = `${(meter.acc + 1) * 50}%`;
     if (meter.acc >= 1) closeMeter(1);
   }
@@ -3624,10 +3647,12 @@ function startFG(kt, pat){
   if (kt === 0) openMeter(pat ? "pat" : "fg", (pw, ac) => launchFG(pw, ac));
   else { G.phase = "presnap"; setTimeout(() => { if (G.fg && G.phase === "presnap") launchFG(...cpuKick(pat ? "pat" : "fg")); }, 1100); }
 }
-function launchFG(pw, ac){
+function launchFG(pw, ac, aim){
   const f = G.fg, kt = f.team, d = dirOf(kt);
-  const dist = distToGoal(kt, G.los) + 17, reach = 30 + pw*30, lat = ac*7.5 + rand(-.35,.35);
-  const short = reach < dist, good = !short && Math.abs(lat) < 3.75;
+  const dist = distToGoal(kt, G.los) + 17, reach = 30 + pw*32, drift = (G.wind || 0)*dist*.008;
+  if (aim === undefined) aim = -drift*.85;                                   // the CPU kicker plays the wind
+  const endZ = aim + drift + ac*4.2 + rand(-.3, .3), lat = endZ - G.ballZ;   // where it crosses the goal line, field coordinates
+  const short = reach < dist, good = !short && Math.abs(endZ) < 3.85;
   const sx = G.los - 7*d, gx = kt === 0 ? 110 : -10;
   const tx = short ? sx + reach*d : gx + d*6, tz = G.ballZ + lat*(short ? reach/dist : 1 + 6/dist);
   G.kick = {kind:"fg", pat:f.pat, good, short, dist, t:0, T: 1.0 + reach*.017, sx, sz:G.ballZ, tx, tz, H: short ? 5 : 7 + pw*3};
