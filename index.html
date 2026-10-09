@@ -664,7 +664,10 @@ const ADS = {lastBreak: 0, minGap: 180e3};
    against Lemon Squeezy's public license API (no server of our own), saved on this device, and re-checked
    about once a week so refunded keys switch back to the free game. Offline never locks anyone out. */
 const PRO = {checkout: "https://homecomingfootball.lemonsqueezy.com/checkout/buy/f8b5911d-8f5f-4f82-b3c1-6c4c2c681825",
-  api: "https://api.lemonsqueezy.com/v1/licenses/", product: /homecoming pro/i, page: "https://homecoming.football/pro.html"};
+  api: "https://api.lemonsqueezy.com/v1/licenses/", product: /homecoming pro/i,
+  productId: 0,    // the LIVE product id once the store is activated: then test-mode keys (a different product id) are refused
+  live: false,     // flip to true once Lemon Squeezy activates the store; until then checkout is test mode and the buy button waits
+  allowTest: () => /^(localhost|127\.0\.0\.1)$/.test(location.hostname) || store.get("hc_protest") === "1", page: "https://homecoming.football/pro.html"};
 const esc = t => String(t).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"})[c]);
 function proData(){ try { const d = JSON.parse(store.get("hc_pro") || "null"); return d && d.key ? d : null; } catch(e){ return null; } }
 const isPro = () => !!proData();
@@ -679,8 +682,10 @@ async function proActivate(raw){
   let j;
   try { j = await proCall("activate", {license_key: key, instance_name: "Homecoming web · " + (/iPhone|iPad|Android/.exec(navigator.userAgent) || ["computer"])[0]}); }
   catch(e){ return {ok: false, msg: "Couldn't reach the license server. Check your connection and try again."}; }
+  if (j.license_key && j.license_key.test_mode && !PRO.allowTest()) return {ok: false, msg: "That's a test-mode key. Use the key from a real purchase."};
+  if (j.meta && PRO.productId && j.meta.product_id !== PRO.productId && !PRO.allowTest()) return {ok: false, msg: "That key isn't for Homecoming Pro. Use the key from your receipt email."};
   if (j.activated && j.meta && PRO.product.test(j.meta.product_name || "")){
-    store.set("hc_pro", JSON.stringify({key, inst: j.instance && j.instance.id, t: Date.now()}));
+    store.set("hc_pro", JSON.stringify({key, inst: j.instance && j.instance.id, pid: j.meta.product_id, t: Date.now()}));
     return {ok: true};
   }
   if (j.meta && !PRO.product.test(j.meta.product_name || "")) return {ok: false, msg: "That key is for a different product."};
@@ -692,7 +697,9 @@ async function proActivate(raw){
 }
 // weekly re-check: only a definite "not valid" answer turns Pro off; network trouble never does
 async function proRecheck(){
-  const d = proData(); if (!d || !navigator.onLine || Date.now() - (d.t || 0) < 7*864e5) return;
+  const d = proData(); if (!d) return;
+  if (PRO.productId && d.pid && d.pid !== PRO.productId && !PRO.allowTest()){ store.set("hc_pro", ""); updateProBtn(); return; }   // a pre-launch test key
+  if (!navigator.onLine || Date.now() - (d.t || 0) < 7*864e5) return;
   try {
     const j = await proCall("validate", d.inst ? {license_key: d.key, instance_id: d.inst} : {license_key: d.key});
     if (j.valid === true){ d.t = Date.now(); store.set("hc_pro", JSON.stringify(d)); }
@@ -709,7 +716,7 @@ function openPro(why, after){
   } else {
     $("proT").textContent = why || "Go Pro · $4.99, one time";
     B.innerHTML = (why && why !== "key" ? `<p class="psm" style="font-size:15px;color:#dfe6ff;margin:0 0 6px">This is a Homecoming Pro feature. $4.99 once, not a subscription.</p>` : `<p class="psm" style="font-size:15px;color:#dfe6ff;margin:0 0 6px">Support a one-person game and get:</p>`) + proPerks() +
-      `<div class="abtn"><button class="big" id="proBuy">BUY PRO · $4.99</button><button class="ghost" id="proX">NOT NOW</button></div>` +
+      `<div class="abtn"><button class="big" id="proBuy"${PRO.live || PRO.allowTest() ? "" : " disabled"}>${PRO.live || PRO.allowTest() ? "BUY PRO · $4.99" : "PRO · COMING SOON"}</button><button class="ghost" id="proX">NOT NOW</button></div>` +
       `<div class="pk"><input id="proKey" placeholder="Paste your license key" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="License key"><button class="ghost" id="proAct">UNLOCK</button></div><div class="pmsg" id="proMsg" aria-live="polite"></div>` +
       `<p class="psm">Checkout by Lemon Squeezy. Your key arrives by email. 14-day no-questions refund. <a href="${PRO.page}" target="_blank" rel="noopener">Pro &amp; refunds</a></p>`;
     B.querySelector("#proBuy").onclick = () => { SFX.tick(); window.open(PRO.checkout, "_blank", "noopener"); const m = $("proMsg"); m.className = "pmsg"; m.textContent = "Checkout opened in a new tab. Paste your key here when you're done."; };
@@ -5910,7 +5917,7 @@ $("careerBtn").addEventListener("click", () => { audioInit(); SFX.tick(); openCa
 $("proBtn").addEventListener("click", () => { audioInit(); SFX.tick(); openPro(); });
 updateProBtn(); setTimeout(proRecheck, 4000);
 // back from checkout (Lemon Squeezy's "Back to Homecoming" button lands on ?pro=1): open the key box
-try { const q = new URLSearchParams(location.search); if (q.has("pro")){ history.replaceState(null, "", location.pathname); if (!isPro()) setTimeout(() => openPro("key"), 300); } } catch(e){}
+try { const q = new URLSearchParams(location.search); if (q.has("protest")) store.set("hc_protest", "1"); if (q.has("pro")){ history.replaceState(null, "", location.pathname); if (!isPro()) setTimeout(() => openPro("key"), 300); } } catch(e){}
 $("backBtn").addEventListener("click", () => { if (pickState.step === 0) return showScreen("title"); pickState.step--; pickState.q = ""; $("pickSearch").value = ""; renderPick(); });
 $("flipBtn").addEventListener("click", () => { G.flip = !G.flip; $("flipBtn").setAttribute("aria-pressed", G.flip ? "true" : "false"); SFX.tick();
   document.querySelectorAll("#cards canvas").forEach(cv => cv.style.transform = G.flip ? "scaleX(-1)" : ""); if (G.phase === "playcall") alignPreview(); });
