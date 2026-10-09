@@ -38,6 +38,24 @@ html,body{height:100%;margin:0;background:var(--ink);color:var(--chrome);font-fa
 #rotate .rphone i{position:absolute;left:50%;bottom:5px;width:10px;height:4px;margin-left:-5px;background:var(--chrome);border-radius:2px}
 @keyframes rot{0%,25%{transform:rotate(0)}55%,85%{transform:rotate(-90deg)}100%{transform:rotate(0)}}
 @media (orientation:portrait) and (pointer:coarse){#rotate{display:flex}}
+#pro{position:fixed;inset:0;z-index:61;display:flex;align-items:center;justify-content:center;background:rgba(4,6,20,.72);padding:10px}
+#pro[hidden]{display:none}
+#pro .awin{width:min(540px,100%);max-height:100%;overflow:auto;background:linear-gradient(#2d4fd6,#14238a);border:3px solid #e9eefc;border-radius:12px;box-shadow:0 0 0 3px #0b1033;padding:12px 18px 14px;text-align:center;font-family:"DotGothic16",var(--body);color:#fff}
+#pro .ak{font-size:12px;letter-spacing:.2em;color:var(--gold)}#pro .at{font-size:22px;margin:2px 0 8px;line-height:1.2}
+#pro ul{text-align:left;margin:0 auto 10px;max-width:400px;padding-left:22px;font-size:15px;line-height:1.5;color:#dfe6ff}
+#pro .pk{display:flex;gap:8px;max-width:420px;margin:10px auto 4px}#pro .pk input{flex:1;min-width:0;font:inherit;font-size:15px;padding:6px 8px;border-radius:6px;border:2px solid #e9eefc;background:#0b1033;color:#fff}
+#pro .pk button{font-size:18px;padding:4px 12px 1px}
+#pro .pmsg{min-height:1.4em;font-size:14px;color:var(--gold);margin:4px 0}#pro .pmsg.bad{color:#ff9c8a}
+#pro .psm{font-size:12px;color:#b9c6f5;margin-top:8px}#pro .psm a{color:#fff}
+#pro .abtn{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:6px}
+#pro .big{font-size:22px;padding:6px 22px 2px}
+.protag{font-size:.7em;color:var(--gold);letter-spacing:.08em}
+.slot{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;text-align:left;background:#121b36;border:1px solid var(--line);padding:8px 12px;margin:6px 0}
+.slot small{display:block;color:#9fb0dc}
+.kitd{display:grid;grid-template-columns:120px 1fr;gap:12px;align-items:start}.kitd canvas{width:120px;image-rendering:pixelated;background:#0b1226;border:1px solid var(--line)}
+.kitd .crow{margin:2px 0 8px}.kitd .crow span{display:block;font-size:13px;letter-spacing:.1em;color:var(--gold);margin-bottom:3px}
+.rtab{width:100%;border-collapse:collapse;font-size:14px;margin:6px 0}.rtab th,.rtab td{padding:4px 6px;border-bottom:1px solid var(--line);text-align:right}.rtab th:first-child,.rtab td:first-child{text-align:left}.rtab th{color:var(--gold);font-weight:400}
+#offTabs{grid-auto-flow:row;grid-template-columns:repeat(4,1fr);gap:8px!important}
 #a2hs{position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;background:rgba(4,6,20,.7);padding:10px}
 #a2hs[hidden]{display:none}
 #a2hs .awin{width:min(520px,100%);max-height:100%;overflow:auto;background:linear-gradient(#2d4fd6,#14238a);border:3px solid #e9eefc;border-radius:12px;box-shadow:0 0 0 3px #0b1033;padding:12px 18px 14px;text-align:center;font-family:"DotGothic16",var(--body);color:#fff}
@@ -450,7 +468,7 @@ button:focus-visible{outline:none}
   <div class="logojp">ホームカミング</div>
   <div class="tag">Friday night. Your field.</div>
   <p class="lede">Pick your high school and play under the lights on its real field, rebuilt from map data. Phone (sideways), keyboard, or controller.</p>
-  <div class="stack"><button class="big" id="careerBtn">COACH MODE</button><button class="ghost" id="playBtn">QUICK GAME</button></div>
+  <div class="stack"><button class="big" id="careerBtn">COACH MODE</button><button class="ghost" id="playBtn">QUICK GAME</button><button class="ghost" id="proBtn">★ GO PRO</button></div>
   <p class="credit">13,000+ high school football programs · School list: NCES · Field and neighborhood data © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap contributors</a><br>Player skeleton and motion: Microsoft Rocketbox (MIT). Trees, cars, houses and sounds: Kenney (CC0). Sky reflections: Poly Haven (CC0). Not affiliated with or endorsed by any school, district, league or game publisher. Players are fictional. School colors are approximate.</p>
   <p class="credit legal">© 2026 Andrew Maxwell · <a href="https://homecoming.football/pro.html" target="_blank" rel="noopener">Pro &amp; refunds</a> · <a href="https://homecoming.football/privacy.html" target="_blank" rel="noopener">Privacy</a> · <a href="https://homecoming.football/terms.html" target="_blank" rel="noopener">Terms</a> · <a href="https://homecoming.football/credits.html" target="_blank" rel="noopener">Credits &amp; licenses</a></p>
 </section>
@@ -492,6 +510,7 @@ button:focus-visible{outline:none}
 </section>
 <div id="coach" hidden><div class="cwin"><div class="ck">COACH SAYS</div><div class="ct" id="coachT"></div><div class="cb" id="coachB"></div><button class="big" id="coachGo">GOT IT</button></div></div>
 <div id="rotate" aria-live="polite"><div class="rphone"><i></i></div><b>Turn your phone sideways</b><small>Homecoming plays in landscape.</small></div>
+<div id="pro" hidden><div class="awin" role="dialog" aria-modal="true" aria-labelledby="proT"><div class="ak">HOMECOMING PRO</div><div class="at" id="proT"></div><div id="proB"></div></div></div>
 <div id="a2hs" hidden><div class="awin"><div class="ak">BEST EXPERIENCE</div><div class="at">Put Homecoming on your home screen</div>
   <div class="ab" id="a2hsSteps"></div>
   <div class="abtn"><button class="big" id="a2hsGo" hidden>INSTALL</button><button class="ghost" id="a2hsX">NOT NOW</button></div></div></div>
@@ -640,7 +659,76 @@ window.adsbygoogle = window.adsbygoogle || [];
 window.adBreak = window.adConfig = function(o){ adsbygoogle.push(o); };
 try { adConfig({preloadAdBreaks: "on", sound: "on"}); } catch(e){}
 const ADS = {lastBreak: 0, minGap: 180e3};
-const isPro = () => !!store.get("hc_pro");
+/* ---------- Homecoming Pro: one-time $4.99 via Lemon Squeezy (merchant of record) ----------
+   Checkout happens on Lemon Squeezy; the buyer gets a license key and pastes it here. The key is activated
+   against Lemon Squeezy's public license API (no server of our own), saved on this device, and re-checked
+   about once a week so refunded keys switch back to the free game. Offline never locks anyone out. */
+const PRO = {checkout: "https://homecomingfootball.lemonsqueezy.com/checkout/buy/f8b5911d-8f5f-4f82-b3c1-6c4c2c681825",
+  api: "https://api.lemonsqueezy.com/v1/licenses/", product: /homecoming pro/i, page: "https://homecoming.football/pro.html"};
+const esc = t => String(t).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"})[c]);
+function proData(){ try { const d = JSON.parse(store.get("hc_pro") || "null"); return d && d.key ? d : null; } catch(e){ return null; } }
+const isPro = () => !!proData();
+async function proCall(action, body){
+  const r = await fetch(PRO.api + action, {method: "POST", headers: {Accept: "application/json"}, body: new URLSearchParams(body)});
+  let j = {}; try { j = await r.json(); } catch(e){}
+  return j;
+}
+async function proActivate(raw){
+  const key = String(raw || "").trim().replace(/\s+/g, "");
+  if (!/^[A-Za-z0-9-]{16,64}$/.test(key)) return {ok: false, msg: "That doesn't look like a license key. It's in your receipt email."};
+  let j;
+  try { j = await proCall("activate", {license_key: key, instance_name: "Homecoming web · " + (/iPhone|iPad|Android/.exec(navigator.userAgent) || ["computer"])[0]}); }
+  catch(e){ return {ok: false, msg: "Couldn't reach the license server. Check your connection and try again."}; }
+  if (j.activated && j.meta && PRO.product.test(j.meta.product_name || "")){
+    store.set("hc_pro", JSON.stringify({key, inst: j.instance && j.instance.id, t: Date.now()}));
+    return {ok: true};
+  }
+  if (j.meta && !PRO.product.test(j.meta.product_name || "")) return {ok: false, msg: "That key is for a different product."};
+  const err = String(j.error || "");
+  if (/limit/i.test(err)) return {ok: false, msg: "This key is already active on 3 devices. Email andrewmaxwellbusiness@gmail.com and we'll reset it."};
+  if (/not found/i.test(err)) return {ok: false, msg: "Key not found. Copy it straight from your receipt email."};
+  if (/disabled|expired|refund/i.test(err)) return {ok: false, msg: "This key is no longer active (refunded or disabled)."};
+  return {ok: false, msg: err || "Couldn't activate that key. Try again in a minute."};
+}
+// weekly re-check: only a definite "not valid" answer turns Pro off; network trouble never does
+async function proRecheck(){
+  const d = proData(); if (!d || !navigator.onLine || Date.now() - (d.t || 0) < 7*864e5) return;
+  try {
+    const j = await proCall("validate", d.inst ? {license_key: d.key, instance_id: d.inst} : {license_key: d.key});
+    if (j.valid === true){ d.t = Date.now(); store.set("hc_pro", JSON.stringify(d)); }
+    else if (j.valid === false && (/not found/i.test(j.error || "") || (j.license_key && /disabled|expired/.test(j.license_key.status)))) store.set("hc_pro", "");
+  } catch(e){}
+}
+function proPerks(){ return `<ul><li><b>No ads</b>, ever</li><li><b>3 Coach Mode save slots</b>: coach more than one school</li><li><b>Name your players</b></li><li><b>Uniform designer</b>: helmet, jersey, pants, numbers</li><li><b>Record book</b>: season stats and program records</li></ul>`; }
+function openPro(why, after){
+  const box = $("pro"), B = $("proB"), close = () => { box.hidden = true; after && after(); };
+  if (isPro()){
+    const d = proData();
+    $("proT").textContent = "You're Pro. Thank you!";
+    B.innerHTML = proPerks() + `<p class="psm">Key ending ${esc(d.key.slice(-6))} is active on this device. Clearing site data? Just enter the key again. <a href="${PRO.page}" target="_blank" rel="noopener">Pro &amp; refunds</a></p><div class="abtn"><button class="big" id="proX">DONE</button></div>`;
+  } else {
+    $("proT").textContent = why || "Go Pro · $4.99, one time";
+    B.innerHTML = (why && why !== "key" ? `<p class="psm" style="font-size:15px;color:#dfe6ff;margin:0 0 6px">This is a Homecoming Pro feature. $4.99 once, not a subscription.</p>` : `<p class="psm" style="font-size:15px;color:#dfe6ff;margin:0 0 6px">Support a one-person game and get:</p>`) + proPerks() +
+      `<div class="abtn"><button class="big" id="proBuy">BUY PRO · $4.99</button><button class="ghost" id="proX">NOT NOW</button></div>` +
+      `<div class="pk"><input id="proKey" placeholder="Paste your license key" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="License key"><button class="ghost" id="proAct">UNLOCK</button></div><div class="pmsg" id="proMsg" aria-live="polite"></div>` +
+      `<p class="psm">Checkout by Lemon Squeezy. Your key arrives by email. 14-day no-questions refund. <a href="${PRO.page}" target="_blank" rel="noopener">Pro &amp; refunds</a></p>`;
+    B.querySelector("#proBuy").onclick = () => { SFX.tick(); window.open(PRO.checkout, "_blank", "noopener"); const m = $("proMsg"); m.className = "pmsg"; m.textContent = "Checkout opened in a new tab. Paste your key here when you're done."; };
+    const act = async () => {
+      const m = $("proMsg"), btn = B.querySelector("#proAct"); m.className = "pmsg"; m.textContent = "Checking your key…"; btn.disabled = true;
+      const r = await proActivate($("proKey").value); btn.disabled = false;
+      if (r.ok){ jingle("levelup"); banner("PRO UNLOCKED", "Thanks for supporting Homecoming"); openPro(null, after); updateProBtn(); }
+      else { m.className = "pmsg bad"; m.textContent = r.msg; SFX.tick(); }
+    };
+    B.querySelector("#proAct").onclick = act;
+    B.querySelector("#proKey").onkeydown = e => { e.stopPropagation(); if (e.key === "Enter") act(); };
+    if (why === "key") { $("proT").textContent = "Enter your Pro key"; setTimeout(() => $("proKey").focus(), 50); }
+  }
+  B.querySelector("#proX").onclick = () => { SFX.tick(); close(); };
+  box.hidden = false;
+}
+function updateProBtn(){ const b = $("proBtn"); if (b) b.textContent = isPro() ? "★ PRO" : "★ GO PRO"; }
+// Pro-only feature gate: runs fn when Pro, otherwise shows the upgrade card
+function proGate(feature, fn){ if (isPro()) return fn(); openPro(feature); }
 function adAfterGame(done){
   const games = +(store.get("hc_games") || 0) + 1; store.set("hc_games", String(games));
   let finished = false, started = false;
@@ -1547,14 +1635,27 @@ function jerseyTex(num, fg, outline){
   x.lineWidth = 12; x.strokeStyle = outline; x.strokeText(String(num), 64, 70); x.fillStyle = fg; x.fillText(String(num), 64, 70);
   return tex(c);
 }
-function kitFor(team){
-  const sch = team === 0 ? G.home : G.away, awayKit = team === 0 ? G.userIsHome === false : G.userIsHome !== false;
+function kitFor(team, plain){
+  const sch = plain || (team === 0 ? G.home : G.away), awayKit = plain ? false : team === 0 ? G.userIsHome === false : G.userIsHome !== false;
   const dark = c => luminance(c) < .12;
   const jersey = awayKit ? "#f3f3f3" : sch.c1;
   const num = awayKit ? sch.c1 : (luminance(sch.c1) > .55 ? "#111" : (dark(sch.c2) ? "#fff" : sch.c2));
   const outline = awayKit ? (sch.c2 === "#FFFFFF" || luminance(sch.c2) > .8 ? "#222" : sch.c2) : (luminance(sch.c1) > .55 ? "#fff" : (num === "#fff" ? sch.c2 === "#FFFFFF" ? shade(sch.c1,.5) : sch.c2 : "#fff"));
   const pants = awayKit ? (luminance(sch.c2) > .8 || dark(sch.c2) ? "#e2e2e2" : sch.c2) : (dark(sch.c2) ? "#e8e8e8" : sch.c2);
-  return {jersey, num, outline, pants, helmet: sch.c1, mask: dark(sch.c2) || sch.c2 === "#FFFFFF" ? "#c9ccd1" : sch.c2, socks: awayKit ? "#f0f0f0" : sch.c1, stripe: sch.c2 === sch.c1 ? "#fff" : sch.c2};
+  const k = {jersey, num, outline, pants, helmet: sch.c1, mask: dark(sch.c2) || sch.c2 === "#FFFFFF" ? "#c9ccd1" : sch.c2, socks: awayKit ? "#f0f0f0" : sch.c1, stripe: sch.c2 === sch.c1 ? "#fff" : sch.c2};
+  return (!plain && customKit(sch, k, awayKit)) || k;
+}
+// Pro uniform designer: a saved kit per school replaces the generated one (away games keep a white jersey)
+const KIT_KEY = sc => `hc_kit_${sc.state}_${sc.key}`;
+function savedKit(sc){ try { return sc && sc.state && JSON.parse(store.get(KIT_KEY(sc)) || "null"); } catch(e){ return null; } }
+function customKit(sch, base, awayKit){
+  const u = isPro() && savedKit(sch); if (!u) return null;
+  const k = Object.assign({}, base, {helmet: u.helmet, mask: u.mask, pants: u.pants});
+  if (awayKit){ k.jersey = "#f3f3f3"; k.num = u.jersey; k.socks = "#f0f0f0"; }
+  else { k.jersey = u.jersey; k.num = u.num; k.socks = u.socks; }
+  k.outline = luminance(k.num) > .55 ? (luminance(k.jersey) > .55 ? "#222" : shade(k.num, .45)) : (luminance(k.jersey) > .55 ? "#fff" : "#fff");
+  k.stripe = u.stripe || (u.helmet === u.num ? "#fff" : u.num);
+  return k;
 }
 const decalCache = {};
 function helmetDecal(team){
@@ -4247,7 +4348,9 @@ function showScreen(id){
    grades and eligibility, graduation, 8th-grade camp recruiting.
    Saved in browser storage on this device.
    ================================================================ */
-const CAREER_KEY = "hc_career_v1";
+// save slot 1 is everyone's; slots 2 and 3 are Pro
+const careerKey = n => n > 1 ? `hc_career_v1_s${n}` : "hc_career_v1";
+let carSlot = 1;
 const FIRST = ["Jalen","Marcus","Tyler","Diego","Caleb","Andre","Mason","Isaiah","Ethan","Mateo","Jordan","DeShawn","Logan","Elijah","Malik","Noah","Xavier","Brandon","Cole","Trey","Luis","Darius","Owen","Javier","Cameron","Kai","Tristan","Jamal","Gavin","Nico","Aiden","Terrell","Bryce","Carlos","Devin","Hunter","Jaylen","Miles","Riley","Santiago","Tavon","Wyatt","Zion","Ty","Kendrick","Austin","Rashad","Colton","Dominic","Emmanuel","Grant","Hector","Ian","Jace","Keegan","Landon","Manny","Nate","Omar","Parker","Quinn","Rocco","Sam","Theo","Uriah","Victor","Wes","Yusuf","Zach","Bo","Cash","Dante","Eli","Finn","Gio","Hank","Isaac","Jett","Kobe","Leo","Micah","Nash","Otis","Pete","Reggie","Sione","Tanner","Vince","Walker","Kenji","Amari","Brody","Cyrus","Desmond","Ezra","Felix","Gus","Hayden","Jonah","Kingston"];
 const LAST = ["Alvarez","Brooks","Carter","Delgado","Ellis","Fuentes","Garrison","Hale","Ibarra","Jennings","Kowalski","Landry","Mendoza","Nakamura","Okafor","Pruitt","Quintero","Reyes","Sampson","Tafoya","Underwood","Vasquez","Whitaker","Xiong","Yates","Zamora","Abernathy","Banks","Castillo","Dawson","Espinoza","Fletcher","Gutierrez","Holloway","Ingram","Jefferson","Kaufman","Lopez","Mercer","Nguyen","Ortega","Patel","Ramsey","Sorensen","Toliver","Valdez","Washington","Young","Bishop","Cruz","Dixon","Everett","Ford","Greene","Hughes","Irving","Jackson","Keller","Lindgren","Morales","Novak","Odom","Pierce","Rhodes","Salazar","Thibodeaux","Ulrich","Vega","Wallace","Archer","Becker","Chavez","Duarte","Ferris","Gentry","Herrera","Iverson","Jimenez","Knox","Lambert","Moreno","Nash","Oliveira","Pham","Rivera","Stokes","Tran","Vaughn","Webb","Alexander","Bradford","Coleman","Diaz","Estrada","Flores","Graham","Hayes","Kim","Leon","Malone"];
 const POS_NEED = {QB:2, RB:2, WR:5, TE:2, OL:7, DL:6, LB:4, DB:7, K:1};
@@ -4293,9 +4396,9 @@ function oppRating(sch){ const r = seeded(sch.key + sch.state); return Math.roun
 /* ---------- start / save / load ---------- */
 function careerSave(){
   if (!CAR) return;
-  try { store.set(CAREER_KEY, JSON.stringify(CAR)); } catch(e){}
+  try { store.set(careerKey(carSlot), JSON.stringify(CAR)); } catch(e){}
 }
-function careerLoad(){ try { const s = store.get(CAREER_KEY), c = s ? JSON.parse(s) : null; if (c) rosterFill(c); return c; } catch(e){ return null; } }
+function careerLoad(slot = carSlot){ try { const s = store.get(careerKey(slot)), c = s ? JSON.parse(s) : null; if (c) rosterFill(c); return c; } catch(e){ return null; } }
 // saves from the 7-on-7 days: walk-ons fill the new spots (tight ends, extra linemen, nickel corners)
 function rosterFill(c){
   if (!c.recruits) c.recruits = []; if (!c.commits) c.commits = []; if (c.prestige === undefined) c.prestige = 0;
@@ -5137,6 +5240,40 @@ const EVENT_MOOD = {flu:"worried", heat:"worried", dinner:"happy", fight:"angry"
 function clampCareer(){ ["fans","morale","ad","chem","health"].forEach(k => CAR[k] = clamp(Math.round(CAR[k]), 0, 100)); CAR.roster.forEach(p => { p.morale = clamp(Math.round(p.morale), 0, 100); p.gpa = clamp(Math.round(p.gpa*10)/10, 0, 4); p.ovr = clamp(Math.round(p.ovr), 25, 99); }); }
 function careerNews(t){ if (CAR){ CAR.log.unshift({s: CAR.season, w: CAR.week, t}); CAR.log = CAR.log.slice(0, 40); } }
 
+/* ---------- Pro: player names, record book ---------- */
+function renamePlayer(p){
+  const clean = (t, d) => { t = String(t == null ? "" : t).replace(/[^\p{L}\p{M} .'\-]/gu, "").replace(/\s+/g, " ").trim().slice(0, 14); return t || d; };
+  const f = prompt(`First name for #${p.num} (${p.pos})`, p.first); if (f === null) return;
+  const l = prompt(`Last name for #${p.num} ${clean(f, p.first)}`, p.last); if (l === null) return;
+  p.first = clean(f, p.first); p.last = clean(l, p.last); p.named = true; careerSave(); SFX.tick(); openOffice("roster");
+}
+// every career game feeds the record book (tracked for everyone so it's all there if you upgrade later)
+function trackCareerStats(ng, us, them, simmed){
+  const st = !simmed && G.stats ? G.stats[0] : null, opp = ng.opp ? ng.opp.name : ng.oppName || "";
+  const c = CAR.cur = CAR.cur || {g:0, pf:0, pa:0, pass:0, rush:0, to:0, sacks:0, played:0};
+  c.g++; c.pf += us; c.pa += them;
+  if (st){ c.played++; c.pass += st.pass; c.rush += st.rush; c.to += st.to; c.sacks += (G.stats[1] || {}).sacks || 0; }
+  const R = CAR.records = CAR.records || {}, rec = (k, v, more) => { if (!R[k] || v > R[k].v) R[k] = Object.assign({v, s: CAR.season, opp}, more || {}); };
+  rec("pts", us); if (us > them) rec("margin", us - them, {score: `${us}-${them}`});
+  if (st){ rec("pass", st.pass); rec("rush", st.rush); rec("total", st.pass + st.rush); }
+}
+function renderRecords(h){
+  const rows = CAR.history.map(x => ({s: x.season, w: x.w, l: x.l, note: x.note, st: x.st})).concat(CAR.cur ? [{s: CAR.season, w: CAR.wins, l: CAR.losses, note: "In progress", st: CAR.cur}] : []);
+  const td = (st, k) => st ? (k === "pf" || k === "pa" ? st[k] : st.played ? st[k].toLocaleString() : "–") : "–";
+  h(`<h4 class="hh">SEASON BY SEASON</h4>` + (rows.length ? `<table class="rtab"><tr><th>SEASON</th><th>W-L</th><th>PF</th><th>PA</th><th>PASS</th><th>RUSH</th><th>TO</th></tr>` +
+    rows.map(r => `<tr><td>${r.s} <small>${esc(r.note)}</small></td><td>${r.w}-${r.l}</td><td>${td(r.st,"pf")}</td><td>${td(r.st,"pa")}</td><td>${td(r.st,"pass")}</td><td>${td(r.st,"rush")}</td><td>${td(r.st,"to")}</td></tr>`).join("") + `</table>` : `<p class="sub">Play a game and your first season shows up here.</p>`));
+  h(`<p class="sub">Yards and turnovers count games you play yourself; simmed games add the score only.</p>`);
+  const R = CAR.records || {}, all = CAR.history.concat(CAR.cur ? [{w: CAR.wins, l: CAR.losses}] : []);
+  const best = CAR.history.slice().sort((a, b) => b.w - a.w)[0];
+  const line = (label, r, f) => r ? `<tr><td>${label}</td><td>${f(r)}</td><td>${esc(r.opp)} · S${r.s}</td></tr>` : "";
+  h(`<h4 class="hh">PROGRAM RECORDS</h4><table class="rtab">` +
+    `<tr><td>All-time record</td><td>${all.reduce((a, x) => a + x.w, 0)}-${all.reduce((a, x) => a + x.l, 0)}</td><td>${CAR.titles ? `🏆 ${CAR.titles} state title${CAR.titles > 1 ? "s" : ""}` : ""}</td></tr>` +
+    (best ? `<tr><td>Best season</td><td>${best.w}-${best.l}</td><td>Season ${best.season} · ${esc(best.note)}</td></tr>` : "") +
+    line("Most points", R.pts, r => r.v) + line("Biggest win", R.margin, r => `${r.score} (+${r.v})`) +
+    line("Passing yards, game", R.pass, r => r.v) + line("Rushing yards, game", R.rush, r => r.v) + line("Total yards, game", R.total, r => r.v) + `</table>`);
+  if (CAR.alumni && CAR.alumni.length) h(`<h4 class="hh">ALUMNI</h4>` + CAR.alumni.map(a => `<p class="sub">🏈 ${esc(a)}</p>`).join(""));
+}
+
 /* ---------- the office (hub) ---------- */
 function teamOvr(){ const s = starters(); return Math.round(s.reduce((a,p) => a + p.ovr, 0) / Math.max(1, s.length)); }
 function nextGame(){ return CAR.playoff ? CAR.playoff.next : CAR.schedule.find(g => !g.result); }
@@ -5149,8 +5286,8 @@ function openOffice(tab){
   $("offStats").innerHTML = `<div class="money">$${CAR.money.toLocaleString()}<small>BOOSTER FUND</small></div><div class="money">${CAR.points}<small>COACH POINTS</small></div>` +
     `<div class="money" style="grid-column:span 2;font-size:22px">PROGRAM ${starStr(progInfo().level)} <small>${progInfo().name} · PRESTIGE ${CAR.prestige || 0}</small></div>` +
     meter("AD TRUST", CAR.ad) + meter("FANS", CAR.fans) + meter("LOCKER ROOM", CAR.morale) + meter("CHEMISTRY", CAR.chem) + meter("HEALTH", CAR.health);
-  const tabs = ["game","roster","recruit","facilities","schedule","news"];
-  $("offTabs").innerHTML = ""; tabs.forEach(t => { const b = document.createElement("button"); b.textContent = t.toUpperCase(); b.setAttribute("aria-pressed", (tab||"game") === t); b.onclick = () => { SFX.tick(); openOffice(t); }; $("offTabs").appendChild(b); });
+  const tabs = ["game","roster","recruit","facilities","schedule","records","uniform","news"];
+  $("offTabs").innerHTML = ""; tabs.forEach(t => { const b = document.createElement("button"); b.textContent = t.toUpperCase() + ((t === "records" || t === "uniform") && !isPro() ? " ★" : ""); b.setAttribute("aria-pressed", (tab||"game") === t); b.onclick = () => { SFX.tick(); openOffice(t); }; $("offTabs").appendChild(b); });
   tab = tab || "game"; o.innerHTML = "";
   const h = (html) => { const d = document.createElement("div"); d.innerHTML = html; o.appendChild(d); return d; };
   if (tab === "game"){
@@ -5171,13 +5308,17 @@ function openOffice(tab){
     const st = starters(), qb = st.find(p => p.pos === "QB"), rb = st.find(p => p.pos === "RB");
     h(`<p class="sub">Starting QB ${qb ? `#${qb.num} ${qb.first} ${qb.last} ${starStr(stars(qb.ovr))}` : "none"}${rb ? `  ·  RB #${rb.num} ${rb.first} ${rb.last}` : ""}</p>`);
   } else if (tab === "roster"){
-    h(`<p class="sub">Tap a player to train him with coach points (+3 overall each). Starters are picked automatically by rating; hurt, suspended or ineligible (GPA under 2.0) players sit.</p>`);
+    const naming = G.renaming && isPro();
+    h(`<p class="sub">${naming ? "Tap a player to rename him. Names stay on this device." : "Tap a player to train him with coach points (+3 overall each). Starters are picked automatically by rating; hurt, suspended or ineligible (GPA under 2.0) players sit."}</p>`);
+    const nb = h(`<div class="nbtns" style="justify-content:center;margin-bottom:8px"><button class="${naming ? "big" : "ghost"}" id="nameMode">${naming ? "✔ DONE NAMING" : isPro() ? "✎ NAME PLAYERS" : "✎ NAME PLAYERS ★ PRO"}</button></div>`);
+    nb.querySelector("#nameMode").onclick = () => proGate("Name your players", () => { G.renaming = !naming; SFX.tick(); openOffice("roster"); });
     const st = new Set(starters());
     ["QB","RB","WR","TE","OL","DL","LB","DB","K"].forEach(pos => {
       CAR.roster.filter(p => p.pos === pos).sort((a,b) => b.ovr - a.ovr).forEach(p => {
         const flags = [p.inj > 0 ? `<b class="bad">INJ ${p.inj}w</b>` : "", p.susp > 0 ? `<b class="bad">SUSP</b>` : "", p.gpa < 2 && p.trait !== "Scholar" ? `<b class="bad">INELIGIBLE</b>` : "", st.has(p) ? `<b class="ok">STARTER</b>` : "", p.ovr >= STAR_OVR ? `<b class="star">★ STAR</b>` : ""].join(" ");
         const row = h(`<button class="prow"><span class="pnum">${p.num}</span><span class="pmain"><b>${p.first} ${p.last}</b><small>${p.pos} · ${["FR","SO","JR","SR"][p.grade-9]} · GPA ${p.gpa.toFixed(1)}${p.trait ? " · " + p.trait : ""}</small></span><span class="pst">${starStr(stars(p.ovr))}<small>${p.ovr} OVR · POT ${starStr(stars(p.pot)).replace(/☆/g,"")}</small></span><span class="pfl">${flags}</span></button>`);
         row.querySelector("button").onclick = () => {
+          if (naming) return renamePlayer(p);
           if (CAR.points < 1){ banner("NO COACH POINTS", "Win games to earn more"); return; }
           if (p.ovr >= p.pot){ banner("MAXED OUT", `${p.first} has hit his ceiling`); return; }
           CAR.points--; p.ovr = Math.min(p.pot, p.ovr + 3); p.morale += 4; clampCareer(); careerSave(); SFX.catch(); openOffice("roster");
@@ -5192,6 +5333,12 @@ function openOffice(tab){
     });
   } else if (tab === "recruit"){
     renderRecruit(h);
+  } else if (tab === "records"){
+    if (!isPro()){ h(`<p class="lede">The record book tracks every season: points, passing and rushing yards, turnovers, and your program's all-time records.</p>`); const b = h(`<button class="big">★ UNLOCK WITH PRO</button>`); b.querySelector("button").onclick = () => openPro("Record book"); }
+    else renderRecords(h);
+  } else if (tab === "uniform"){
+    if (!isPro()){ h(`<p class="lede">Design your team's uniform: helmet, facemask, jersey, numbers, pants and socks. It shows up in every game.</p>`); const b = h(`<button class="big">★ UNLOCK WITH PRO</button>`); b.querySelector("button").onclick = () => openPro("Uniform designer"); }
+    else { const d = h(""); renderKitDesigner(d, CAR.school, () => openOffice("uniform")); }
   } else if (tab === "schedule"){
     CAR.schedule.forEach(g => h(`<div class="srow ${g.result ? (g.result.us > g.result.them ? "w" : "l") : ""}"><span>WK ${g.week}</span><b>${g.home ? "vs" : "@"} ${g.opp.name}</b><em>${g.homecoming ? "HOMECOMING" : g.rivalry ? "RIVALRY" : ""}</em><span>${g.result ? `${g.result.us > g.result.them ? "W" : "L"} ${g.result.us}-${g.result.them}` : starStr(stars(g.opp.rating))}</span></div>`));
     const P = CAR.playoff, rounds = ["FIRST ROUND","QUARTERFINAL","SEMIFINAL","STATE CHAMPIONSHIP"];
@@ -5267,6 +5414,7 @@ function simGame(ng){
 function careerResult(ng, us, them, simmed){
   const won = us > them;
   ng.result = {us, them};
+  trackCareerStats(ng, us, them, simmed);
   if (!ng.round){ won ? CAR.wins++ : CAR.losses++; }
   const fac = CAR.facilities;
   let money = (ng.home ? 120 + fac.stands*60 + CAR.fans*2 : 60) + (won ? 120 : 0) + (ng.homecoming && ng.home ? 150 : 0);
@@ -5427,7 +5575,7 @@ function offseason(){
   const note = CAR.playoff && CAR.playoff.champ ? "State champions" : CAR.playoff ? `Playoffs (${CAR.playoff.won} win${CAR.playoff.won === 1 ? "" : "s"})` : CAR.wins >= 4 ? "Progress" : "Rebuilding";
   const goals = seasonGoals(), met = goals.filter(g => g.done).length;
   CAR.ad += met === goals.length ? 12 : met ? 0 : -12;
-  CAR.history.push({season: CAR.season, w: CAR.wins, l: CAR.losses, note});
+  CAR.history.push({season: CAR.season, w: CAR.wins, l: CAR.losses, note, st: CAR.cur || null}); CAR.cur = null;
   const seniors = CAR.roster.filter(p => p.grade === 12);
   const commits = seniors.filter(p => p.ovr >= 62).map(p => ({p, level: p.ovr >= 84 ? "D1" : p.ovr >= 74 ? "D2" : "D3"}));
   CAR.prestige = (CAR.prestige || 0) + commits.reduce((a, c) => a + (c.level === "D1" ? 3 : c.level === "D2" ? 2 : 1), 0) + Math.round(Object.values(CAR.facilities).reduce((a, b) => a + b, 0)/2);
@@ -5445,7 +5593,7 @@ function offseason(){
   if (CAR.ad < 25 && !CAR.hotSeat && CAR.season >= 2){ CAR.hotSeat = true; CAR.ad = 25; careerNews("The school board puts the coach on the hot seat."); }
   else if (CAR.ad >= 40) CAR.hotSeat = false;
   else if (CAR.ad < 25 && CAR.hotSeat){
-    storyDialog([{who:"ad", mood:"worried", text:`Coach, the board voted. We're making a change. ${CAR.history.length} season${CAR.history.length > 1 ? "s" : ""}, ${CAR.history.reduce((a,h) => a + h.w, 0)} wins. I'm sorry.`}], () => chapterCard("", "THE END", "完", () => { store.set(CAREER_KEY, ""); CAR = null; openCareerMenu(); }));
+    storyDialog([{who:"ad", mood:"worried", text:`Coach, the board voted. We're making a change. ${CAR.history.length} season${CAR.history.length > 1 ? "s" : ""}, ${CAR.history.reduce((a,h) => a + h.w, 0)} wins. I'm sorry.`}], () => chapterCard("", "THE END", "完", () => { store.set(careerKey(carSlot), ""); CAR = null; openCareerMenu(); }));
     return;
   }
   // 8th-grade camp: pick your incoming class
@@ -5541,19 +5689,25 @@ function careerTutorialDone(){
 
 /* ---------- entry: menu ---------- */
 function openCareerMenu(){
-  showScreen("office"); const saved = CAR || careerLoad(); const o = $("officeBody"); o.innerHTML = "";
+  showScreen("office"); CAR = null; const o = $("officeBody"); o.innerHTML = "";
   $("offTabs").innerHTML = ""; $("offStats").innerHTML = ""; $("offSchool").textContent = "COACH MODE"; $("offSchool").style.background = "#1b2748"; $("offSchool").style.color = "#fff";
   $("offSeason").textContent = "TAKE OVER A PROGRAM. TURN IT AROUND.";
-  if (saved && saved.school){
-    const c = document.createElement("div"); c.className = "ngame";
-    c.innerHTML = `<div class="ntag">CONTINUE</div><p class="sub" style="font-size:20px"><b>${saved.school.name}</b> · Season ${saved.season} · ${saved.wins}-${saved.losses}</p><div class="nbtns"><button class="big" id="contC">CONTINUE</button><button class="ghost" id="newC">NEW CAREER</button></div>`;
-    o.appendChild(c);
-    c.querySelector("#contC").onclick = () => { CAR = saved; openOffice(); };
-    c.querySelector("#newC").onclick = () => { if (c.dataset.sure){ store.set(CAREER_KEY, ""); CAR = null; pickForCareer(); } else { c.dataset.sure = 1; c.querySelector("#newC").textContent = "TAP AGAIN TO ERASE SAVE"; } };
-  } else {
+  const saves = [1, 2, 3].map(n => careerLoad(n));
+  if (!saves.some(Boolean)){
     const p = document.createElement("p"); p.className = "lede"; p.textContent = "Pick the school you want to coach. Fake players, real field. Each week brings decisions: grades, boosters, injuries, rivals. Win enough and the stands fill up."; o.appendChild(p);
-    const b = document.createElement("button"); b.className = "big"; b.textContent = "PICK YOUR SCHOOL"; b.onclick = () => pickForCareer(); o.appendChild(b);
   }
+  saves.forEach((sv, i) => {
+    const n = i + 1, locked = n > 1 && !isPro(), c = document.createElement("div"); c.className = "slot";
+    c.innerHTML = sv && sv.school
+      ? `<div><b>SLOT ${n} · ${esc(sv.school.name)}</b><small>Season ${sv.season} · ${sv.wins}-${sv.losses}${sv.titles ? ` · 🏆 ${sv.titles}` : ""}</small></div><div class="nbtns"><button class="big">CONTINUE</button><button class="ghost">ERASE</button></div>`
+      : `<div><b>SLOT ${n} · EMPTY</b><small>${locked ? `<span class="protag">★ PRO</span> Coach a second school at the same time` : "Start a new career"}</small></div><div class="nbtns"><button class="${locked ? "ghost" : "big"}">${locked ? "★ UNLOCK" : "NEW CAREER"}</button></div>`;
+    o.appendChild(c);
+    const [b1, b2] = c.querySelectorAll("button");
+    if (sv && sv.school){
+      b1.onclick = () => { if (locked) return openPro("Save slots 2 and 3"); carSlot = n; CAR = sv; SFX.tick(); openOffice(); };
+      b2.onclick = () => { if (c.dataset.sure){ store.set(careerKey(n), ""); SFX.tick(); openCareerMenu(); } else { c.dataset.sure = 1; b2.textContent = "TAP AGAIN TO ERASE"; } };
+    } else b1.onclick = () => { if (locked) return openPro("Save slots 2 and 3"); carSlot = n; SFX.tick(); pickForCareer(); };
+  });
   const back = document.createElement("button"); back.className = "ghost"; back.textContent = "BACK"; back.style.marginTop = "14px"; back.onclick = () => showScreen("title"); o.appendChild(back);
 }
 function pickForCareer(){ G.pickingFor = "career"; pickState.step = 0; pickState.q = ""; $("pickSearch").value = ""; renderPick(); showScreen("pick"); }
@@ -5694,6 +5848,28 @@ async function renderPick(){
   }
 }
 const SWATCHES = ["#C8102E","#8A1538","#5E2B7E","#003DA5","#0C2340","#4B9CD3","#006341","#00843D","#FFC72C","#D4A017","#FF6A13","#151515","#8A8D8F","#FFFFFF"];
+const KIT_SW = ["#C8102E","#8A1538","#5E2B7E","#003DA5","#0C2340","#4B9CD3","#006341","#00843D","#FFC72C","#B3995D","#FF6A13","#151515","#8A8D8F","#C9CCD1","#FFFFFF"];
+function defaultKit(sc){ const k = kitFor(0, sc); return {helmet: k.helmet, mask: k.mask, jersey: k.jersey, num: k.num, pants: k.pants, socks: k.socks}; }
+function drawKit(cv, u){
+  const x = cv.getContext("2d"); x.imageSmoothingEnabled = false; x.clearRect(0, 0, 60, 96);
+  const R = (c, a, b, w, h) => { x.fillStyle = c; x.fillRect(a, b, w, h); };
+  R(u.pants, 18, 54, 10, 22); R(u.pants, 32, 54, 10, 22); R(u.socks, 19, 74, 8, 10); R(u.socks, 33, 74, 8, 10); R("#151515", 17, 84, 11, 5); R("#151515", 32, 84, 11, 5);
+  R(u.jersey, 14, 26, 32, 30); R(u.jersey, 6, 28, 9, 16); R(u.jersey, 45, 28, 9, 16); R("#c68a5b", 7, 44, 7, 6); R("#c68a5b", 46, 44, 7, 6);
+  R(u.helmet, 19, 4, 22, 18); R(u.helmet, 17, 8, 26, 12); R(u.mask, 21, 15, 18, 2); R(u.mask, 21, 19, 18, 2); R(u.mask, 29, 15, 2, 7);
+  x.fillStyle = u.num; x.font = `400 16px ${FONT}`; x.textAlign = "center"; x.fillText("7", 30, 48);
+}
+function renderKitDesigner(box, sc, rerender){
+  const u = Object.assign(defaultKit(sc), savedKit(sc) || {});
+  box.innerHTML = `<div class="kitd"><div><canvas width="60" height="96"></canvas><button class="ghost" data-reset style="font-size:15px;padding:4px 10px 1px;margin-top:8px;width:120px">RESET</button></div><div class="kitrows"></div></div><p class="sub">Your uniform shows up in every ${esc(sc.name)} game on this device. Away games use a white jersey with your jersey color as the numbers.</p>`;
+  const cv = box.querySelector("canvas"), rows = box.querySelector(".kitrows"); drawKit(cv, u);
+  [["HELMET","helmet"],["FACEMASK","mask"],["JERSEY","jersey"],["NUMBERS","num"],["PANTS","pants"],["SOCKS","socks"]].forEach(([label, k]) => {
+    const row = document.createElement("div"); row.className = "crow"; row.innerHTML = `<span>${label}</span>`;
+    KIT_SW.forEach(hex => { const b = document.createElement("button"); b.className = "cs"; b.style.background = hex; b.setAttribute("aria-label", `${label} ${hex}`); b.setAttribute("aria-pressed", u[k] === hex ? "true" : "false");
+      b.onclick = () => { u[k] = hex; store.set(KIT_KEY(sc), JSON.stringify(u)); SFX.tick(); rerender(); }; row.appendChild(b); });
+    rows.appendChild(row);
+  });
+  box.querySelector("[data-reset]").onclick = () => { store.set(KIT_KEY(sc), ""); SFX.tick(); rerender(); };
+}
 function renderColorEditor(){
   const box = $("colorEdit"); box.innerHTML = "";
   [["PRIMARY","c1"],["SECONDARY","c2"]].forEach(([label, k]) => {
@@ -5716,6 +5892,9 @@ function openSetup(){
   const rec = getRecord(); $("setupRecord").textContent = rec[0] + rec[1] + rec[2] ? `Your record in this matchup: ${rec[0]}-${rec[1]}${rec[2] ? "-" + rec[2] : ""}` : "First meeting. Make it count.";
   $("colorNote").textContent = G.home.cs === "generated" ? `We don't know ${G.home.name}'s colors yet. Set them below and the game will remember.` : `${G.home.name} colors. Wrong? Fix them below.`;
   renderColorEditor();
+  const kd = document.createElement("div"); kd.style.marginTop = "10px"; $("colorEdit").appendChild(kd);
+  if (isPro()){ const h4 = document.createElement("h4"); h4.className = "hh"; h4.textContent = "UNIFORM DESIGNER"; kd.appendChild(h4); const d = document.createElement("div"); kd.appendChild(d); renderKitDesigner(d, G.home, () => { openSetup(); $("colorEdit").closest("details").open = true; }); }
+  else { const b = document.createElement("button"); b.className = "ghost"; b.textContent = "★ DESIGN THE UNIFORM (PRO)"; b.onclick = () => openPro("Uniform designer"); kd.appendChild(b); }
   loadStadium(G.home);
 }
 function segBind(id, cb){ $(id).addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return;
@@ -5728,6 +5907,10 @@ G.wxPick = "random"; segBind("optWx", v => G.wxPick = v);
 
 $("playBtn").addEventListener("click", () => { audioInit(); SFX.tick(); G.pickingFor = "quick"; pickState.step = 0; renderPick(); showScreen("pick"); });
 $("careerBtn").addEventListener("click", () => { audioInit(); SFX.tick(); openCareerMenu(); });
+$("proBtn").addEventListener("click", () => { audioInit(); SFX.tick(); openPro(); });
+updateProBtn(); setTimeout(proRecheck, 4000);
+// back from checkout (Lemon Squeezy's "Back to Homecoming" button lands on ?pro=1): open the key box
+try { const q = new URLSearchParams(location.search); if (q.has("pro")){ history.replaceState(null, "", location.pathname); if (!isPro()) setTimeout(() => openPro("key"), 300); } } catch(e){}
 $("backBtn").addEventListener("click", () => { if (pickState.step === 0) return showScreen("title"); pickState.step--; pickState.q = ""; $("pickSearch").value = ""; renderPick(); });
 $("flipBtn").addEventListener("click", () => { G.flip = !G.flip; $("flipBtn").setAttribute("aria-pressed", G.flip ? "true" : "false"); SFX.tick();
   document.querySelectorAll("#cards canvas").forEach(cv => cv.style.transform = G.flip ? "scaleX(-1)" : ""); if (G.phase === "playcall") alignPreview(); });
