@@ -6,6 +6,7 @@
 <meta name="description" content="Pick your high school and play under the lights on its real field. Free in your browser, on phone, desktop or controller.">
 <meta property="og:title" content="Homecoming"><meta property="og:description" content="Friday night. Your field. High school football on 13,000+ real fields.">
 <meta property="og:image" content="https://homecoming.football/icon-512.png"><meta property="og:url" content="https://homecoming.football/">
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8386548067544282" crossorigin="anonymous" data-ad-frequency-hint="180s"></script>
 <link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="apple-touch-icon.png"><link rel="icon" href="icon-192.png">
 <title>Homecoming</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -629,6 +630,28 @@ const G = {
 let teams = [[],[]]; // player objects, index 0 = user team
 let sound = true;
 const store = { get(k){try{return localStorage.getItem(k)}catch(e){return null}}, set(k,v){try{localStorage.setItem(k,v)}catch(e){}} };
+/* ---------- ads: Google AdSense (H5 games ad breaks) ----------
+   Rules so ads never get in the way: nothing during a game or the tutorial, no banners over the field, never after
+   your first game, at most one full-screen break after a game ends and no more than once every 3 minutes.
+   Homecoming Pro (coming) turns them off entirely. If no ad is ready, the game just carries on. */
+window.adsbygoogle = window.adsbygoogle || [];
+window.adBreak = window.adConfig = function(o){ adsbygoogle.push(o); };
+try { adConfig({preloadAdBreaks: "on", sound: "on"}); } catch(e){}
+const ADS = {lastBreak: 0, minGap: 180e3};
+const isPro = () => !!store.get("hc_pro");
+function adAfterGame(done){
+  const games = +(store.get("hc_games") || 0) + 1; store.set("hc_games", String(games));
+  let finished = false, started = false;
+  const go = () => { if (finished) return; finished = true; if (MUS.master && AC) MUS.master.gain.setTargetAtTime(sound ? 1 : 0, AC.currentTime, .1); done && done(); };
+  if (isPro() || games < 2 || G.tutorialGame || Date.now() - ADS.lastBreak < ADS.minGap || !navigator.onLine) return go();
+  try {
+    adBreak({type: "next", name: "after_game",
+      beforeAd: () => { started = true; ADS.lastBreak = Date.now(); if (MUS.master && AC) MUS.master.gain.setTargetAtTime(0, AC.currentTime, .05); },
+      afterAd: () => {},
+      adBreakDone: () => go()});
+  } catch(e){ return go(); }
+  setTimeout(() => { if (!started) go(); }, 1500);                // nothing showed up: don't keep anyone waiting
+}
 try { G.tipsSeen = JSON.parse(store.get("hc_tips") || "{}") || {}; } catch(e) { G.tipsSeen = {}; }
 if (store.get("hc_sound") === "off") sound = false;
 
@@ -5445,7 +5468,7 @@ function careerAfterGame(){
   const ng = G.career.game, us = G.score[0], them = G.score[1];
   G.career = null; G.userIsHome = true;
   jingle(us > them ? "victory" : "loss");
-  careerResult(ng, us, them, false);
+  setTimeout(() => adAfterGame(() => careerResult(ng, us, them, false)), 900);
 }
 // offense-only mode: the CPU's possession is simulated as one drive
 function careerSimDrive(){
@@ -5697,8 +5720,8 @@ $("gfxBtn").textContent = `GRAPHICS: ${RETRO ? "RETRO" : "HD"}`;
 $("gfxBtn").addEventListener("click", () => { RETRO = !RETRO; store.set("hc_gfx", RETRO ? "retro" : "hd");
   if (!RETRO){ prNow = PR_MAX; renderer.setPixelRatio(prNow); } resize(); $("gfxBtn").textContent = `GRAPHICS: ${RETRO ? "RETRO" : "HD"}`; });
 $("quitBtn").addEventListener("click", () => quitToMenu());
-$("againBtn").addEventListener("click", () => { $("menuBtn").hidden = false; startGame(); });
-$("newBtn").addEventListener("click", () => quitToMenu(true));
+$("againBtn").addEventListener("click", () => adAfterGame(() => { $("menuBtn").hidden = false; startGame(); }));
+$("newBtn").addEventListener("click", () => adAfterGame(() => quitToMenu(true)));
 $("copyBtn").addEventListener("click", () => {
   const done = () => { $("copyBtn").textContent = "COPIED"; };
   try { navigator.clipboard.writeText(G.shareText).then(done, () => { $("copyBtn").textContent = G.shareText; }); } catch(e){ $("copyBtn").textContent = G.shareText; }
