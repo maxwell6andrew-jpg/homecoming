@@ -2385,7 +2385,7 @@ function snap(){
   for (const p of [...teams[0], ...teams[1]]) if (p.fx !== undefined){ p.x = p.fx; p.z = p.fz; p.vx = 0; p.vz = 0; p.tx = p.x; p.tz = p.z; }
   if (G.poss === 0 && !G.special){ const pk = PLAYS[G.offPlay] && PLAYS[G.offPlay].kind;
     setTimeout(() => { if (G.phase !== "live" || G.poss !== 0) return;
-      if (pk === "pass" && G.sub === "pre") coach("throw", "Throw it!", i => (i === "touch" ? "<b>Hold</b> a receiver's number button" : i === "pad" ? "<b>Hold</b> <kbd>X</kbd> <kbd>Y</kbd> or <kbd>B</kbd> (receivers 1, 2, 3)" : "<b>Hold</b> <kbd>1</kbd> <kbd>2</kbd> or <kbd>3</kbd> (the numbers over your receivers)") + ". A ring shrinks around him: <b>let go when it closes</b>. Pick the one with nobody near him.");
+      if (pk === "pass" && G.sub === "pre") coach("throw", "Throw it!", i => (i === "touch" ? "<b>Hold</b> a receiver's number button" : i === "pad" ? "<b>Hold</b> <kbd>X</kbd> <kbd>Y</kbd> or <kbd>B</kbd> (receivers 1, 2, 3)" : "<b>Click and hold</b> on a receiver (or hold his number key)") + ". A ring shrinks around him: <b>let go when it closes</b>. Pick the one with nobody near him.");
       else if (pk !== "pass" && G.carrier && G.carrier.team === 0) coach("run", "Run it!", i => (i === "touch" ? "<b>Drag</b> the left side of the screen to steer. Hold <b>TURBO</b> to burst, tap <b>JUKE</b> when a tackler is close." : i === "pad" ? "Steer with the <b>left stick</b>. Hold <kbd>RT</kbd> for turbo, press <kbd>A</kbd> to juke a tackler." : "Steer with <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> or arrows. Hold <kbd>Shift</kbd> for turbo, <kbd>Space</kbd> to juke a tackler.") + " Find the hole and go.");
     }, pk === "pass" ? 450 : 650); }
   G.phase = "live"; G.playT = 0; G.sub = "pre"; G.windup = null; G.aim = null; if (G.aimRing) G.aimRing.visible = false; G.completed = false; G.fumbleRec = false; G.loose = null; G.los0 = G.los; G.turnover = false; recStart();
@@ -2930,7 +2930,7 @@ const HOWTO = {
   touch: [["Move", "Drag anywhere on the left half"], ["Snap · Juke · Dive · Slide", "The big green button (its label changes with the moment)"], ["Turbo", "Hold the orange button (it drains, then refills)"],
     ["Throw", "<b>Hold</b> a number 1–5 (or press on the receiver), <b>let go when his ring turns green</b>"], ["Switch defender", "Blue SWITCH button"], ["Kicks", "Tap once for power, again when the needle hits green"]],
   keys: [["Move", "<kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> or arrows"], ["Snap · Juke · Dive · Slide", "<kbd>Space</kbd>"], ["Turbo", "Hold <kbd>Shift</kbd>"],
-    ["Throw", "<b>Hold</b> <kbd>1</kbd>–<kbd>5</kbd>, <b>release when the ring turns green</b>"], ["Switch defender", "<kbd>Q</kbd>"], ["Pause · Full screen", "<kbd>Esc</kbd> · <kbd>F</kbd>"]],
+    ["Throw", "<b>Click and hold a receiver</b> (or hold <kbd>1</kbd>–<kbd>5</kbd>), <b>let go when the ring turns green</b>"], ["Switch defender", "<kbd>Q</kbd>"], ["Pause · Full screen", "<kbd>Esc</kbd> · <kbd>F</kbd>"]],
   pad: [["Move", "Left stick or d-pad"], ["Snap · Juke · Dive · Slide", "<kbd>A</kbd>"], ["Turbo", "Hold <kbd>RT</kbd>"],
     ["Throw", "<b>Hold</b> <kbd>X</kbd> <kbd>Y</kbd> <kbd>B</kbd> <kbd>LB</kbd> <kbd>LT</kbd> for receivers 1–5, <b>release on green</b>"], ["Switch defender", "<kbd>LB</kbd> (on defense)"], ["Pause", "<kbd>Start</kbd>"]],
 };
@@ -5554,7 +5554,7 @@ const gl = renderer.domElement;
 gl.addEventListener("pointerdown", e => {
   audioInit();
   if (G.phase === "menu" || G.paused) return;
-  if (e.clientX < innerWidth*.5 && stickId === null){
+  if (e.pointerType !== "mouse" && e.clientX < innerWidth*.5 && stickId === null){   // mouse: clicks go to receivers, not the stick
     stickId = e.pointerId; sx0 = e.clientX; sy0 = e.clientY; stick.style.display = "block"; stick.style.left = sx0+"px"; stick.style.top = sy0+"px";
     knob.style.transform = "translate(0,0)"; $("stickHint").style.display = "none"; gl.setPointerCapture(e.pointerId); return;
   }
@@ -5578,6 +5578,13 @@ gl.addEventListener("pointermove", e => {
   input.jx = dx/R; input.jy = -dy/R;
 });
 gl.addEventListener("pointerup", e => { if (G.aim && e.pointerId === G.aimPointer) releaseAim(); });
+gl.addEventListener("pointermove", e => {
+  if (e.pointerType !== "mouse") return;
+  let on = false;
+  if (G.phase === "live" && G.poss === 0 && G.sub === "pre" && G.targets) G.targets.forEach(r => { const v = new THREE.Vector3(r.x, 1.4, r.z).project(camera);
+    if (Math.hypot((v.x+1)/2*innerWidth - e.clientX, (1-v.y)/2*innerHeight - e.clientY) < 95) on = true; });
+  gl.style.cursor = on ? "pointer" : "";
+});
 const endStick = e => { if (e.pointerId !== stickId) return; stickId = null; input.jx = input.jy = 0; stick.style.display = "none"; };
 gl.addEventListener("pointerup", endStick); gl.addEventListener("pointercancel", endStick);
 const press = (el, down, up) => {
@@ -5609,7 +5616,7 @@ function updateHints(){
   document.body.classList.toggle("no-touch", !usingTouch || usingPad);
   const h = $("padHint"); if (G.phase === "menu" || G.phase === "final"){ h.hidden = true; return; }
   if (usingPad){ h.hidden = false; h.textContent = "L-STICK MOVE · A SNAP/JUKE/DIVE/SLIDE · X Y B LB LT THROW 1-5 · RT TURBO · LB SWITCH"; }
-  else if (!usingTouch){ h.hidden = false; h.textContent = "WASD/ARROWS MOVE · SPACE SNAP/JUKE/DIVE/SLIDE · 1-5 THROW · SHIFT TURBO · Q SWITCH · F FULL SCREEN"; }
+  else if (!usingTouch){ h.hidden = false; h.textContent = "WASD/ARROWS MOVE · SPACE SNAP/JUKE/DIVE/SLIDE · CLICK A RECEIVER TO THROW · SHIFT TURBO · F FULL SCREEN"; }
   else h.hidden = true;
 }
 addEventListener("pointerdown", e => { const t = e.pointerType === "touch"; if (t !== usingTouch){ usingTouch = t; updateHints(); } }, true);
