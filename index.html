@@ -1,4 +1,12 @@
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#06080f">
+<meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="Homecoming">
+<meta name="description" content="Pick your high school and play under the lights on its real field. Free in your browser, on phone, desktop or controller.">
+<meta property="og:title" content="Homecoming"><meta property="og:description" content="Friday night. Your field. High school football on 13,000+ real fields.">
+<meta property="og:image" content="https://homecoming.football/icon-512.png"><meta property="og:url" content="https://homecoming.football/">
+<link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="apple-touch-icon.png"><link rel="icon" href="icon-192.png">
 <title>Homecoming</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Graduate&family=DotGothic16&family=Pixelify+Sans:wght@500;700&family=M+PLUS+Rounded+1c:wght@700;800&family=Teko:wght@500;600;700&family=Barlow+Semi+Condensed:ital,wght@0,500;0,600;0,700;1,700&display=swap">
@@ -16,6 +24,16 @@
 html,body{height:100%;margin:0;background:var(--ink);color:var(--chrome);font-family:var(--body);overflow:hidden;
   -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
 #gl{position:fixed;inset:0;touch-action:none}
+/* phones play sideways only: upright shows a rotate card over everything */
+#rotate{display:none;position:fixed;inset:0;z-index:100;background:#06080f;color:var(--chrome);flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;padding:24px;font-family:"DotGothic16",var(--body)}
+#rotate b{font-size:22px;color:var(--gold)}#rotate small{font-size:15px;color:var(--dim)}
+#rotate .rphone{width:54px;height:92px;border:4px solid var(--chrome);border-radius:10px;position:relative;animation:rot 2.2s ease-in-out infinite;margin-bottom:14px}
+#rotate .rphone i{position:absolute;left:50%;bottom:5px;width:10px;height:4px;margin-left:-5px;background:var(--chrome);border-radius:2px}
+@keyframes rot{0%,25%{transform:rotate(0)}55%,85%{transform:rotate(-90deg)}100%{transform:rotate(0)}}
+@media (orientation:portrait) and (pointer:coarse){#rotate{display:flex}}
+#a2hs{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 10px);z-index:60;width:min(560px,calc(100% - 24px));background:#13205e;border:2px solid #5d84ff;border-radius:10px;padding:10px 40px 10px 14px;font-size:14px;line-height:1.4;color:var(--chrome);box-shadow:0 6px 20px rgba(0,0,0,.5)}
+#a2hs .shr{display:inline-block;padding:0 6px;border:1px solid #8fb0ff;border-radius:4px}
+#a2hs button{position:absolute;right:6px;top:6px;background:none;border:0;color:var(--chrome);font-size:18px;padding:4px 8px}
 #gl canvas{display:block;width:100%;height:100%}
 #fx{position:fixed;inset:0;z-index:1;pointer-events:none}
 #fx::after{content:"";position:absolute;inset:-50%;opacity:.07;mix-blend-mode:overlay;animation:grain .5s steps(4) infinite;
@@ -261,6 +279,9 @@ body.no-touch #ctrl{display:none}
 #padHint{position:fixed;z-index:9;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 10px);font-family:var(--display);font-size:17px;letter-spacing:.1em;color:rgba(255,255,255,.55);pointer-events:none;white-space:nowrap}
 /* sideways phone: shrink and tuck controls into the corners */
 @media (orientation:landscape) and (max-height:520px){
+  /* title fits on one sideways screen: smaller logo, no blurb, credits in small print */
+  .logo{font-size:clamp(44px,17vh,84px);margin-top:2vh}.logojp{font-size:15px}.title .tag{margin:4px 0 8px}
+  .title .lede{display:none}.title .stack{margin:4px 0}.title .credit{padding-top:8px;font-size:10px;line-height:1.35}
   .bug{transform:skewX(-10deg) scale(.82);transform-origin:top center}
   #pad{gap:8px;right:calc(env(safe-area-inset-right,0px) + 10px);bottom:calc(env(safe-area-inset-bottom,0px) + 10px)}
   #act{width:74px;height:74px;font-size:22px}.pb{width:62px;height:62px;font-size:19px}
@@ -400,7 +421,7 @@ button:focus-visible{outline:none}
   <div class="logo">HOMECOMING</div>
   <div class="logojp">ホームカミング</div>
   <div class="tag">Friday night. Your field.</div>
-  <p class="lede">Pick your high school and play under the lights on its real field, rebuilt from map data. Phone (upright or sideways), keyboard, or controller.</p>
+  <p class="lede">Pick your high school and play under the lights on its real field, rebuilt from map data. Phone (sideways), keyboard, or controller.</p>
   <div class="stack"><button class="big" id="careerBtn">COACH MODE</button><button class="ghost" id="playBtn">QUICK GAME</button></div>
   <p class="credit">13,000+ high school football programs · School list: NCES · Field and neighborhood data © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap contributors</a><br>Player skeleton and motion: Microsoft Rocketbox (MIT). Trees, cars, houses and sounds: Kenney (CC0). Sky reflections: Poly Haven (CC0). Not affiliated with or endorsed by any school, district, league or game publisher. Players are fictional. School colors are approximate.</p>
   <p class="credit legal">© 2026 Andrew Maxwell · <a href="https://homecoming.football/privacy.html" target="_blank" rel="noopener">Privacy</a> · <a href="https://homecoming.football/terms.html" target="_blank" rel="noopener">Terms</a> · <a href="https://homecoming.football/credits.html" target="_blank" rel="noopener">Credits &amp; licenses</a></p>
@@ -437,6 +458,8 @@ button:focus-visible{outline:none}
   <div class="offtabs seg" id="offTabs"></div>
   <div class="offbody" id="officeBody"></div>
 </section>
+<div id="rotate" aria-live="polite"><div class="rphone"><i></i></div><b>Turn your phone sideways</b><small>Homecoming plays in landscape.</small></div>
+<div id="a2hs" hidden><b>Play full screen:</b> tap <span class="shr">Share</span> then <b>Add to Home Screen</b>, and open Homecoming from your home screen.<button id="a2hsX" aria-label="Dismiss">✕</button></div>
 <div id="dialog" hidden><div id="dlgBack"></div><canvas id="dlgPix"></canvas><canvas id="dlgStage"></canvas><canvas id="dlgFx"></canvas><img id="dlgFace" alt="" hidden><div class="dlg" id="dlgBox"><canvas id="dlgPort" width="48" height="48"></canvas><div class="dlgbody"><div class="dlgname" id="dlgWho"></div><p id="dlgText" aria-live="polite"></p><span class="dlgmore" aria-hidden="true">▼</span><div id="dlgChoices"></div></div></div></div>
 <div id="howto" hidden></div>
 <div id="chapter" hidden><div class="lines"></div><div class="sun"></div><div class="bar top"></div><div class="bar bot"></div><div class="ct"><div class="k" id="chK"></div><div class="t" id="chT"></div><div class="j" id="chJ"></div></div></div>
@@ -2080,7 +2103,7 @@ function startGame(){
   $("nA").textContent = G.home.abbr; $("nB").textContent = G.away.abbr;
   $("tA").style.background = G.home.c1; $("tA").style.color = luminance(G.home.c1) > .6 ? "#111" : "#fff";
   $("tB").style.background = "#f2f2f2"; $("tB").style.color = "#111"; $("tB").style.borderLeft = `6px solid ${G.away.c1}`;
-  showScreen(null); $("hud").hidden = false; $("menuBtn").hidden = false; $("ctrl").hidden = false; $("fsBtn").hidden = !fsOK(); updateHints();
+  showScreen(null); $("hud").hidden = false; $("menuBtn").hidden = false; $("ctrl").hidden = false; $("fsBtn").hidden = !fsOK(); $("a2hs").hidden = true; updateHints();
   const kt = 1 - G.startPoss;
   G.special = {kind:"kickoff", kickTeam:kt}; G.poss = kt; G.los = kt === 0 ? 40 : 60; layoutSpecial("kickoff", kt); G.special = null;
   G.phase = "intro"; G.introT = 0; G.introKick = kt; crowdTo(1);
@@ -3846,14 +3869,19 @@ function updateCamera(dt){
     return;
   }
   let fx = G.los, fz = G.ballZ;
+  const air = G.ball && G.ball.air;
   if (G.phase === "live" || G.phase === "dead" || G.phase === "kick"){ fx = G.ball.x; fz = G.ball.z; }
+  // a pass in the air: frame where it's going, not where it is, so the catch is on screen when it happens
+  if (air && G.phase === "live"){ const u = clamp(air.t/air.T + .45, 0, 1); fx = G.ball.x + (air.tx - G.ball.x)*u; fz = G.ball.z + (air.tz - G.ball.z)*u; }
   const portrait = camera.aspect < 1, calling = G.phase === "playcall";
   const live = (G.phase === "live" && G.sub !== "pre") || G.phase === "kick";
-  // broadcast "behind the offense" camera; upright phones need it higher to fit the formation
-  const back = portrait ? (live ? 16 : 19) : (live ? 12.5 : 11.2);
-  const up = portrait ? (live ? 11.5 : 16) : (live ? 7.6 : 6.8);
-  const ahead = portrait ? (calling ? -6 : live ? 8 : 4) : (calling ? 3 : live ? 9 : 10);
-  const k = 1 - Math.exp(-dt*(G.phase === "kick" ? 2.6 : 4.2));
+  // on defense the camera sits behind your defense, so the CPU's passes come toward the lens: pull it higher and
+  // farther back to show the whole secondary, and keep the look point between the camera and the line
+  const defense = G.poss === 1 && !G.special && (G.phase === "live" || G.phase === "presnap" || G.phase === "playcall" || G.phase === "dead");
+  const back = portrait ? (live ? 16 : 19) : defense ? (live ? 21 : 19) : (live ? 12.5 : 11.2);
+  const up = portrait ? (live ? 11.5 : 16) : defense ? (live ? 13 : 12) : (live ? 7.6 : 6.8);
+  const ahead = defense ? (live ? 4 : 6) : portrait ? (calling ? -6 : live ? 8 : 4) : (calling ? 3 : live ? 9 : 10);
+  const k = 1 - Math.exp(-dt*(G.phase === "kick" ? 2.6 : air ? 7.5 : 4.2));
   camFocus.x += (fx - camFocus.x)*k; camFocus.z += (fz*.7 - camFocus.z)*k;
   camPos.lerp(new THREE.Vector3(camFocus.x - back, up, camFocus.z*.85), k);
   camLook.lerp(new THREE.Vector3(camFocus.x + ahead, 0, camFocus.z*.95), k);
@@ -5523,6 +5551,15 @@ function toggleFS(){
   } catch(e){}
 }
 $("fsBtn").addEventListener("click", toggleFS);
+const IS_IOS = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+const STANDALONE = matchMedia("(display-mode: standalone)").matches || matchMedia("(display-mode: fullscreen)").matches || navigator.standalone === true;
+if (matchMedia("(pointer: coarse)").matches && !STANDALONE){
+  // the first touch on a phone takes the game full screen and holds it sideways (Android/Chrome; iOS can't)
+  addEventListener("pointerup", function goFS(){ removeEventListener("pointerup", goFS, true);
+    if (fsOK() && !(document.fullscreenElement || document.webkitFullscreenElement)) toggleFS(); }, true);
+  if (IS_IOS && !store.get("hc_a2hs")){ $("a2hs").hidden = false; }
+}
+$("a2hsX").onclick = e => { e.stopPropagation(); $("a2hs").hidden = true; store.set("hc_a2hs", "1"); };
 addEventListener("keydown", e => { if (e.code === "KeyF" && G.phase !== "menu") toggleFS(); });
 
 /* ---- game controllers (standard controllers via the Gamepad API) ----
