@@ -5631,7 +5631,7 @@ function pickRow(list, name, sub, onClick, opts={}){
 function schoolRows(list, schools, onPick, home){
   const shown = schools.slice(0, 80);
   shown.forEach(sc => {
-    const bits = [sc.city, pickState.q ? sc.regionName : "", sc.fmt && sc.fmt !== 11 ? `${sc.fmt}-man` : ""].filter(Boolean);
+    const bits = [sc.city, pickState.q ? sc.regionName : ""].filter(Boolean);
     pickRow(list, sc.name, bits.join(" · "), () => onPick(sc), {colors:[sc.c1, sc.c2], pill: home && sc.city && home.city && sc.city === home.city && sc !== home ? "CROSSTOWN" : null});
   });
   if (schools.length > shown.length){ const n = document.createElement("p"); n.className = "more"; n.textContent = `${schools.length - shown.length} more. Keep typing to narrow it down.`; list.appendChild(n); }
