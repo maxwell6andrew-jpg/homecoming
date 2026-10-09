@@ -2700,8 +2700,9 @@ function think(p, dt, uv){
     if (m <= .15){ fx = 1; fz = 0; m = .82; } // ball carrier keeps running downfield when you let go
     // after a pitch the back keeps bending to the edge for a beat unless you steer him somewhere else
     if (p.tossT > 0 && carrier === p){ p.tossT -= dt; if (Math.abs(fz) < .5){ const w = clamp(p.tossT/1.25, 0, 1), dd = dirOf(p.team); fz = fz*(1 - w) + p.tossSide*.85*w; fx = fx*(1 - w*.5) + dd*.45*w; m = Math.max(m, .9); } }
-    const boost = input.turbo && G.turbo > .02 ? 1.22 : 1;
-    const sp = p.maxSpeed * Math.min(1, m*1.25) * boost * mul;
+    const qbRun = carrier === p && p.role === "QB";                    // quarterbacks aren't backs: slower with it, less burst
+    const boost = input.turbo && G.turbo > .02 ? (qbRun ? 1.1 : 1.22) : 1;
+    const sp = p.maxSpeed * Math.min(1, m*1.25) * boost * mul * (qbRun ? .9 : 1);
     p.accel = ACCEL(p.role) * 1.2; accelTo(p, fx*sp, fz*sp, dt);
     return;
   }
@@ -2764,7 +2765,7 @@ function think(p, dt, uv){
   // defense before the throw
   const as = p.assign || {type:"zone", at:{x:p.x, z:p.z}};
   // the QB tucks it and steps up: underneath defenders and spies come downhill (deep and outside men stay home)
-  if (G.qbUpT > .3 && carrier && carrier.role === "QB" && !(as.deep) && !(as.type === "man" && /WR/.test(as.t.role) && G.qbUpT < .8)){
+  if (G.qbUpT > .18 && carrier && carrier.role === "QB" && !(as.deep && G.qbUpT < .6) && !(as.type === "man" && /WR/.test(as.t.role) && G.qbUpT < .6)){
     if (retarget){ const ip = interceptPoint(p, carrier, 1.1); p.tx = ip.x; p.tz = ip.z; }
     steer(p, p.tx, p.tz, mul, dt, .05); return;
   }
@@ -3029,6 +3030,7 @@ function tackleProb(tackler, carrier){
   if (carrier.team === 0) p = G.diff.tackle;                  // CPU tackling you
   else p = tackler === G.user ? .9 : .72;                     // your defenders
   p *= clamp(1 + (RAT(tackler) - RAT(carrier))*.009, .6, 1.4); // good tacklers wrap up, good runners break it
+  if (carrier.role === "QB") p = Math.min(.97, p*1.18);       // QBs don't break many tackles
   if (tackler.dive > 0) p = Math.max(p, .93);
   if (carrier.juke > 0) p *= .18;
   const sp = Math.hypot(carrier.vx, carrier.vz);
