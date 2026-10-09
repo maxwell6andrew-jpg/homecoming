@@ -1,0 +1,19 @@
+Homecoming
+Copyright (c) 2026 Andrew Maxwell. All rights reserved.
+
+The source code, original artwork, pixel art, music, sound design and writing in this
+repository are proprietary. You may play the game at https://homecoming.football, but you may
+not copy, modify, redistribute or sell them without written permission.
+
+Exceptions (third-party material, each under its own license; see credits.html):
+- data/us/*.json: derived from OpenStreetMap, (c) OpenStreetMap contributors, available under
+  the Open Database License 1.0 (https://opendatacommons.org/licenses/odbl/1-0/). School list
+  from NCES (public domain); colors from Wikidata (CC0).
+- assets/player_*.glb.json, assets/anims.json: Microsoft Rocketbox skeleton and motion, MIT
+  (assets/ROCKETBOX_LICENSE.md).
+- assets/props.glb.json, assets/sfx.*: includes Kenney assets (CC0).
+- assets/env_sunset.jpg: from a Poly Haven HDRI (CC0).
+- Libraries loaded from CDNs (three.js, Rapier, GSAP, howler.js, lil-gui) and Google Fonts
+  remain under their own licenses.
+
+Contact: andrewmaxwellbusiness@gmail.com

@@ -203,7 +203,7 @@ h2.step{font-family:var(--display);font-weight:700;font-size:44px;line-height:1;
 .news{margin:4px 0;color:var(--chrome)}.news small{color:var(--dim);margin-right:6px}
 .hh{font-family:var(--display);letter-spacing:.12em;color:var(--gold);margin:10px 0 0;font-weight:500}
 .offfoot{margin-top:16px;text-align:center}
-/* story scenes: PS2-era JRPG presentation (toon bust over a painted backdrop, framed text box) */
+/* story scenes: classic JRPG presentation (toon bust over a painted backdrop, framed text box) */
 #dialog{position:fixed;inset:0;z-index:30;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding:16px;padding-bottom:calc(env(safe-area-inset-bottom,0px) + 18px);overflow:hidden;--who:#2f5bd3}
 #dlgBack{position:absolute;inset:0;background:#0b1230;transition:background .4s}
 #dlgBack::after{content:"";position:absolute;inset:0;background:radial-gradient(rgba(255,255,255,.07) 1px,transparent 1.6px) 0 0/7px 7px;mix-blend-mode:screen;pointer-events:none}
@@ -289,7 +289,7 @@ body.no-touch #ctrl{display:none}
 }
 @media (prefers-reduced-motion:reduce){#banner.show{animation-duration:2.2s}}
 
-/* ===== JRPG skin: GBA-era Final Fantasy windows for every menu and story screen =====
+/* ===== JRPG skin: retro handheld-RPG windows for every menu and story screen =====
    Blue gradient window, white bevel frame with a dark keyline, white pixel type with a hard drop shadow,
    and a pointing-hand cursor on whatever is focused. The 3D football and its broadcast HUD keep their own look. */
 :root{--pix:"DotGothic16","Barlow Semi Condensed",monospace;--pixh:"Pixelify Sans","Teko",sans-serif;
@@ -402,7 +402,8 @@ button:focus-visible{outline:none}
   <div class="tag">Friday night. Your field.</div>
   <p class="lede">Pick your high school and play under the lights on its real field, rebuilt from map data. Phone (upright or sideways), keyboard, or controller.</p>
   <div class="stack"><button class="big" id="careerBtn">COACH MODE</button><button class="ghost" id="playBtn">QUICK GAME</button></div>
-  <p class="credit">13,000+ high school football programs · School list: NCES · Field and neighborhood data © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap contributors</a><br>Player skeleton and motion: Microsoft Rocketbox (MIT). Trees, cars, houses and sounds: Kenney (CC0). Sky reflections: Poly Haven (CC0). Not affiliated with any school. School colors are approximate.</p>
+  <p class="credit">13,000+ high school football programs · School list: NCES · Field and neighborhood data © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap contributors</a><br>Player skeleton and motion: Microsoft Rocketbox (MIT). Trees, cars, houses and sounds: Kenney (CC0). Sky reflections: Poly Haven (CC0). Not affiliated with or endorsed by any school, district, league or game publisher. Players are fictional. School colors are approximate.</p>
+  <p class="credit legal">© 2026 Andrew Maxwell · <a href="https://homecoming.football/privacy.html" target="_blank" rel="noopener">Privacy</a> · <a href="https://homecoming.football/terms.html" target="_blank" rel="noopener">Terms</a> · <a href="https://homecoming.football/credits.html" target="_blank" rel="noopener">Credits &amp; licenses</a></p>
 </section>
 
 <section class="screen" id="pick" hidden>
@@ -609,7 +610,7 @@ const SFX = {
     s.connect(f); f.connect(g); g.connect(AC.destination); s.start(t); s.stop(t + 1.05); },
   chains(){ [0, .07, .15].forEach(d => tone("triangle", 2400 + Math.random()*600, 1800, .05, .03, d)); },
 };
-/* ---------- music: a tiny chiptune sequencer (pulse/triangle/noise, GBA-style), all synthesized ----------
+/* ---------- music: a tiny chiptune sequencer (pulse/triangle/noise, handheld-style), all synthesized ----------
    Tracks are written as 16th-note steps: a note name starts a note, "-" holds it, "." is a rest.
    The track follows the screen (title, office, story, rival drama, title celebration); in a game the pep band
    plays the fight song between plays and goes quiet while the ball is live. Jingles duck the music. */
@@ -716,7 +717,7 @@ const JINGLES = {
   turnover: {bpm: 170, ch: [{w: "p50", v: .09, s: "F5 - B4 - - -"}, {w: "tri", v: .18, s: "F3 - B2 - - -"}]},
   takeaway: {bpm: 190, ch: [{w: "p25", v: .1, s: "C5 E5 G5 C6 - - G5 C6 - - - -"}]},
   levelup:  {bpm: 220, ch: [{w: "p25", v: .09, s: "C5 E5 G5 C6 E6 G6 - - - -"}, {w: "tri", v: .14, s: "C4 - - - G4 - C5 - - -"}]},
-  coin:     {bpm: 300, ch: [{w: "p50", v: .06, s: "B5 E6 - - - -"}]},
+  coin:     {bpm: 300, ch: [{w: "p50", v: .06, s: "E6 G#6 B6 - - -"}]},
   playoffs: {bpm: 140, ch: [{w: "brass", v: .14, s: "G4 - G4 C5 - - D5 - E5 - - - G5 - - - - - - -"}, {w: "brass", v: .08, s: "E4 - E4 G4 - - B4 - C5 - - - E5 - - - - - - -"}, {w: "tri", v: .2, s: "C3 - - - - - G2 - C3 - - - C3 - - - - - - -"}]},
   chapter:  {bpm: 100, ch: [{w: "tri", v: .1, s: "G4 D5 G5 - - - - -"}, {w: "sine", v: .06, s: ". B4 D5 - - - - -"}]},
   horn:     {bpm: 60, ch: [{w: "brass", v: .12, s: "A2 - - -"}, {w: "brass", v: .1, s: "E3 - - -"}]},
@@ -776,7 +777,7 @@ const dynamic = new THREE.Group(); scene.add(dynamic);
 let scoreboard = null, crowdRows = [], crowdTex = null;
 
 /* Post: render to an sRGB target (MSAA on WebGL2), bloom the hot spots, then a broadcast color grade.
-   Bloom in gamma space on purpose: that's how 360-era games got their glow. Falls back to a plain render. */
+   Bloom in gamma space on purpose: that's how mid-2000s console games got their glow. Falls back to a plain render. */
 let composer = null, bloomPass = null, gradePass = null;
 // anime look for the whole frame: ink lines where depth creases or jumps (silhouettes, edges of stands,
 // buildings, trees), and manga screentone dots laid into the deep shadows
@@ -965,7 +966,7 @@ function trackShape(halfStraight, r){
 }
 function ovalPoints(halfStraight, r, n=96){ return trackShape(halfStraight, r).getSpacedPoints(n).map(p => new THREE.Vector3(p.x + 50, .02, p.y)); }
 
-/* ---------- crowd cards: the PS2-era trick, people painted on strips ---------- */
+/* ---------- crowd cards: the classic console trick, people painted on strips ---------- */
 function crowdCanvas(colors, cheer, signText){
   const c = textCanvas(1024,128), x = c.getContext("2d");
   const skins = ["#f1c7a3","#e0ac7e","#c68a5b","#a26a42","#7a4a2b","#5a3520"], hair = ["#1d1611","#3b2a1d","#6b4a2b","#a87a4a","#d8b77a","#222"];
@@ -2381,7 +2382,7 @@ function throwTo(qb, r, away=false, q=0){
   G.icons.forEach(s => s.visible = false); $("recv").hidden = true;
 }
 const AIM_PERFECT = .5, AIM_WINDOW = .24;
-/* ---------- player ratings: every man on the field has one (Retro Bowl style) ----------
+/* ---------- player ratings: every man on the field has one (arcade-sim style) ----------
    In Coach Mode your starters bring their own overall; opponents use their team rating with a stable
    spread so every team has a couple of stars and a weak spot. Quick Game: you are a 72, the CPU is set
    by difficulty (JV 62, Varsity 70, State 78). 70 is "average": the effects below are relative to it. */
@@ -3918,7 +3919,7 @@ function tip(key, html){
   const t = $("tip"); t.innerHTML = html; t.style.opacity = 1; clearTimeout(tipTO); tipTO = setTimeout(() => t.style.opacity = 0, 6500);
 }
 function setAct(label){ $("act").textContent = label; }
-// menu cursor blip when the mouse moves onto a button (FF-style); touch doesn't hover
+// menu cursor blip when the mouse moves onto a button (RPG-style); touch doesn't hover
 let hoverEl = null, hoverT = 0;
 addEventListener("pointerover", e => { if (e.pointerType !== "mouse") return; const b = e.target.closest && e.target.closest("button"); if (!b || b === hoverEl || b.disabled) return; hoverEl = b;
   const n = performance.now(); if (n - hoverT > 45 && AC && sound){ hoverT = n; tone("square", 1760, 1760, .025, .018); } });
@@ -3929,7 +3930,7 @@ function showScreen(id){
 
 /* ================================================================
    COACH MODE — take over a struggling program and turn it around.
-   Retro Bowl-style loop adapted to high school: weekly decisions,
+   Arcade-style management loop adapted to high school: weekly decisions,
    booster money for facilities, coach points to develop kids,
    grades and eligibility, graduation, 8th-grade camp recruiting.
    Saved in browser storage on this device.
@@ -4024,7 +4025,7 @@ async function careerStart(school){
   ], () => CAR.tutorial ? careerTutorialGame() : openOffice()), loadRig());
 }
 
-/* ---------- characters + dialog: PS2-style story scenes ----------
+/* ---------- characters + dialog: console-RPG story scenes ----------
    Every speaker is a toon character built like the players (same skeleton, idle mocap, ink lines),
    framed as an animated bust: blinks, talks while the text types, and shows a mood. */
 const FACES = {ad:["#7a4a2b","#3b2a1d","#2d3e6b"], booster:["#e0ac7e","#a87a4a","#8a1538"], reporter:["#c68a5b","#1d1611","#4b9cd3"], rivalCoach:["#f0c6a0","#6b6b6b","#222"], principal:["#5b3620","#111","#5e2b7e"], player:["#a06740","#1d1611","#C8102E"], coach:["#dcaa7c","#3b2a1d","#0C2340"]};
@@ -4048,8 +4049,8 @@ const CAST_STYLE = {
   coach:      {hair:"visor", headset:true, pal:{skin:"#dcaa7c", jersey:"#0C2340", hair:"#3b2a1d", cap:"school"}, voice:180, bg:"field", color:"school"},
   player:     {hair:"short", pal:{skin:"#a06740", jersey:"school", hair:"#1d1611"}, voice:205, bg:"hall", color:"school"},
 };
-/* ---------- pixel stage: GBA-style story scenes ----------
-   The cast are the same toon characters as the players, made chibi (big heads), rendered at Game Boy Advance
+/* ---------- pixel stage: handheld-RPG story scenes ----------
+   The cast are the same toon characters as the players, made chibi (big heads), rendered at handheld
    resolution (160 px tall) with 1-pixel ink and blown up with hard pixels. They walk on, bob while idle,
    hop as they talk and pop emote balloons; a portrait of the speaker sits in the text window. */
 const CAST = {r: null, scene: null, cam: null, pcam: null, actors: {}, cur: null, you: null, mood: "neutral", talk: false, blink: 2, raf: 0, last: 0, ok: true, W: 240, H: 160, bg: null, bgKey: ""};
@@ -4081,7 +4082,7 @@ function castShow(who){
   if (!ok) img.src = portrait(who);
   if (ok && !CAST.raf){ CAST.last = 0; CAST.raf = requestAnimationFrame(castFrame); }
 }
-// stage canvas at GBA-ish resolution (about 160 px tall); sprites draw at 1x, or 2x on narrow upright phones
+// stage canvas at handheld-ish resolution (about 160 px tall); sprites draw at 1x, or 2x on narrow upright phones
 function castSize(){
   const box = $("dialog"), w = box.clientWidth || innerWidth, h = box.clientHeight || innerHeight, asp = w/h;
   const W = clamp(Math.round(144*asp), 170, 400), H = Math.round(W/asp);
@@ -4147,7 +4148,7 @@ function drawTrophy(c, x, y){
   rows.forEach((r, j) => [...r].forEach((ch, i) => { if (map[ch]){ c.fillStyle = map[ch]; c.fillRect(x - 6 + i, y - 13 + j, 1, 1); } }));
   if (Math.floor(performance.now()/250) % 2){ c.fillStyle = "#fff"; c.fillRect(x - 3, y - 11, 1, 1); c.fillRect(x + 4, y - 15, 1, 1); c.fillRect(x - 8, y - 6, 1, 1); }
 }
-// emote balloons (Golden Sun / FF style): 13x11 bubble with a symbol
+// emote balloons (classic RPG style): 13x11 bubble with a symbol
 const EMOTE = {happy: {sym: ["..X..","..XX.","..X.X","XXX..","XXX.."], col: "#2f6bff"}, angry: {sym: ["X.X.X",".X.X.","X...X",".X.X.","X.X.X"], col: "#e8202a"},
   worried: {drop: true}, shock: {sym: ["..X..","..X..","..X..",".....","..X.."], col: "#e8202a"}};
 function drawEmote(c, e, x, y){
@@ -4158,7 +4159,7 @@ function drawEmote(c, e, x, y){
   c.fillStyle = e.col; e.sym.forEach((r, j) => [...r].forEach((ch, i) => { if (ch === "X") c.fillRect(x + 4 + i, y + 3 + j, 1, 1); }));
 }
 
-/* ---------- pixel portraits (64x64, GBA JRPG style) ----------
+/* ---------- pixel portraits (64x64, handheld JRPG style) ----------
    Faces are painted pixel by pixel so they read clearly: big anime eyes with a heavy lash line, iris, pupil and
    two catch-lights, cel-shaded skin, a shine stripe in the hair, and a mouth/brows per mood. Blink and talk frames. */
 const FACE_INFO = {
@@ -4285,7 +4286,7 @@ const HAIR_SHORT = [
 const OUTFIT = {you: "polo", ad: "suit", booster: "cardigan", reporter: "blazer", rivalCoach: "jacket", principal: "blazer", coach: "polo", player: "jersey", mate1: "jersey", mate2: "jersey", mate3: "jersey"};
 const DIGITS3 = ["111101101101111","010110010010111","110001010100111","110001010001110","101101111001001","111100110001110","011100111101111","111001010010010","111101111101111","111101111001110"];
 const SPR_CACHE = {};
-/* ---------- pixel stage sprites (GBA JRPG style, drawn pixel by pixel) ----------
+/* ---------- pixel stage sprites (handheld JRPG style, drawn pixel by pixel) ----------
    32x48 chibi facing the camera (symmetric about x = 15.5), eyes glancing toward whoever they're talking to
    (look -1 left, 1 right, 0 ahead). Cel shading lit from the upper left, a tinted one-pixel outline, outfit
    details per character. Poses: idle (2 breathing frames), walk (4), cheer (2). */
@@ -5524,7 +5525,7 @@ function toggleFS(){
 $("fsBtn").addEventListener("click", toggleFS);
 addEventListener("keydown", e => { if (e.code === "KeyF" && G.phase !== "menu") toggleFS(); });
 
-/* ---- game controllers (Xbox / PlayStation / Switch Pro via the Gamepad API) ----
+/* ---- game controllers (standard controllers via the Gamepad API) ----
    A/Cross = snap, juke, dive · X/Square, Y/Triangle, B/Circle = receivers 1, 2, 3
    RT/R2 or RB/R1 = turbo · LB/L1 = switch · Start = pause · D-pad/stick = menus */
 const padPrev = {}; let padFocus = -1, padNavT = 0;
