@@ -486,7 +486,7 @@ button:focus-visible{outline:none}
   <div class="crumbs" id="setupCrumbs"></div>
   <h2 class="step">GAME DAY</h2>
   <div class="matchup" id="matchup"></div>
-  <p class="lede" id="setupRecord" style="margin:-10px 0 14px"></p>
+  <p class="lede" id="setupRecord" style="margin:-10px 0 4px"></p><p class="sub" id="setupTown" style="text-align:center;margin:0 0 14px;color:var(--gold)"></p>
   <details class="colors"><summary id="colorNote">Team colors</summary><div id="colorEdit"></div></details>
   <div class="opts">
     <div class="opt"><h3>QUARTER LENGTH</h3><div class="seg" id="optLen">
@@ -1254,12 +1254,12 @@ function buildStadium(home, away){
   stadium = new THREE.Group(); scene.add(stadium);
   const data = (window.STADIUM_FOR && window.STADIUM_FOR(home)) || STADIUMS[home.key] || {buildings:[], roads:[], trees:[], stands:[], surface:"grass"};
   const lam = new THREE.MeshLambertMaterial({vertexColors:true});
-  const rural = data.buildings.length < 5;
+  const rural = data.buildings.length < 5, E = data.env || envOf(home), BIO = biomeOf(E);
   const recv = o => { o.receiveShadow = true; return o; };
 
   // ground, apron, track
   const gC = noiseCanvas(256, 70); const gT = tex(gC, true); gT.repeat.set(160,160);
-  const ground = recv(new THREE.Mesh(new THREE.CircleGeometry(3000, 48), new THREE.MeshLambertMaterial({color: lin(rural ? "#3b3a24" : "#1c2a1a"), map:gT})));
+  const ground = recv(new THREE.Mesh(new THREE.CircleGeometry(3000, 48), new THREE.MeshLambertMaterial({color: lin(E.known ? BIO.ground : rural ? "#3b3a24" : "#1c2a1a"), map:gT})));
   ground.rotation.x = -Math.PI/2; ground.position.set(50,-.06,0); stadium.add(ground);
   const aT = tex(noiseCanvas(256, 60), true); aT.repeat.set(.12,.12);
   const apron = recv(new THREE.Mesh(new THREE.ShapeGeometry(trackShape(46,40), 48), new THREE.MeshLambertMaterial({color:lin("#356f33"), map:aT})));
@@ -1287,24 +1287,29 @@ function buildStadium(home, away){
 
   // ---- stands, press box, fence, posts, pylons, benches ----
   const parts = [], shadowParts = [];
+  const SZ = [{h: 8, a: 5, len: 44, alen: 28}, {h: 11, a: 7, len: 56, alen: 36}, {h: 16, a: 10, len: 70, alen: 46}, {h: 18, a: 12, len: 80, alen: 56}][E.known ? E.size : 2];
+  const wood = E.known && (E.d === "R" || (E.d === "T" && E.size <= 1));
+  const SC = wood ? {seat: "#a48a64", riser: "#6e5a40", foot: "#856d4d", back: "#5a4834", side: "#6a5640", post: "#43372a", rail: "#b8a78a"}
+                  : {seat: "#b9c0c8", riser: "#7a828c", foot: "#8d959e", back: "#555c66", side: "#626a74", post: "#3f454d", rail: "#aab2bb"};
   const bleacher = (cx, len, rows, side, z0) => {
     for (let r=0;r<rows;r++){
       const z = side*(z0 + r*.9), y = r*.45;
-      shadowParts.push(box(len, .09, .42, cx, y+.42, z, "#b9c0c8"));        // seat plank
-      parts.push(box(len, .45, .06, cx, y+.2, z - side*.4, "#7a828c"));       // riser
-      parts.push(box(len, .05, .3, cx, y+.06, z + side*.18, "#8d959e"));      // foot plank
+      shadowParts.push(box(len, .09, .42, cx, y+.42, z, SC.seat));        // seat plank
+      parts.push(box(len, .45, .06, cx, y+.2, z - side*.4, SC.riser));       // riser
+      parts.push(box(len, .05, .3, cx, y+.06, z + side*.18, SC.foot));      // foot plank
     }
     const top = rows*.45;
-    parts.push(box(len, top+1.1, .2, cx, (top+1.1)/2, side*(z0 + rows*.9 + .1), "#555c66"));
-    for (let k=-1;k<=1;k+=2) parts.push(box(.15, top+1.1, rows*.9+.4, cx + k*len/2, (top+1.1)/2, side*(z0 + rows*.9/2), "#626a74"));
-    for (let s=cx-len/2; s<=cx+len/2; s+=4) parts.push(box(.12, top+1.1, .12, s, (top+1.1)/2, side*(z0 + rows*.9 + .25), "#3f454d"));
-    parts.push(box(len, .08, .08, cx, top+1.15, side*(z0 + rows*.9), "#aab2bb")); // rail
+    parts.push(box(len, top+1.1, .2, cx, (top+1.1)/2, side*(z0 + rows*.9 + .1), SC.back));
+    for (let k=-1;k<=1;k+=2) parts.push(box(.15, top+1.1, rows*.9+.4, cx + k*len/2, (top+1.1)/2, side*(z0 + rows*.9/2), SC.side));
+    for (let s=cx-len/2; s<=cx+len/2; s+=4) parts.push(box(.12, top+1.1, .12, s, (top+1.1)/2, side*(z0 + rows*.9 + .25), SC.post));
+    parts.push(box(len, .08, .08, cx, top+1.15, side*(z0 + rows*.9), SC.rail)); // rail
     return {cx, len, rows, side, z0};
   };
-  const homeStands = bleacher(50, 70, 16, 1, 53.5), awayStands = bleacher(50, 46, 10, -1, 53.5);
-  const pbY = 16*.45 + 1.2, pbZ = 53.5 + 16*.9 + 2.2;
-  parts.push(box(26, 3.6, 4.4, 50, pbY+1.8, pbZ, "#dcd6c8")); parts.push(box(26.8, .5, 5.2, 50, pbY+3.85, pbZ, shade(home.c1,.85)));
-  parts.push(box(24, 1.2, .1, 50, pbY+2.2, pbZ-2.25, "#1a2433")); // press box glass band
+  const homeStands = bleacher(50, SZ.len, SZ.h, 1, 53.5), awayStands = bleacher(50, SZ.alen, SZ.a, -1, 53.5);
+  const pbY = SZ.h*.45 + 1.2, pbZ = 53.5 + SZ.h*.9 + 2.2;
+  const pbW = Math.min(26, SZ.len*.45);
+  parts.push(box(pbW, 3.6, 4.4, 50, pbY+1.8, pbZ, wood ? "#c9b896" : "#dcd6c8")); parts.push(box(pbW + .8, .5, 5.2, 50, pbY+3.85, pbZ, shade(home.c1,.85)));
+  parts.push(box(pbW - 2, 1.2, .1, 50, pbY+2.2, pbZ-2.25, "#1a2433")); // press box glass band
   // fence with chain-link texture around the track
   const flC = textCanvas(64,64), fx = flC.getContext("2d"); fx.strokeStyle = "rgba(200,205,210,.9)"; fx.lineWidth = 2;
   for (let i=-64;i<128;i+=16){ fx.beginPath(); fx.moveTo(i,0); fx.lineTo(i+64,64); fx.moveTo(i+64,0); fx.lineTo(i,64); fx.stroke(); }
@@ -1416,6 +1421,15 @@ function buildStadium(home, away){
 
   // ---- real surroundings from OpenStreetMap ----
   const toG = p => [50 + p[0]*YD, -p[1]*YD];
+  // coast: the ocean fills the side of town where the terrain says it is (8 compass points, east first, counterclockwise)
+  const seaA = E.b === "c" && E.sea >= 0 ? -E.sea*Math.PI/4 : null;
+  const inSea = (x, z, pad = 0) => { if (seaA === null) return false; const dx = x - 50, r = Math.hypot(dx, z); if (r < 205 - pad) return false;
+    const da = Math.atan2(Math.sin(Math.atan2(z, dx) - seaA), Math.cos(Math.atan2(z, dx) - seaA)); return Math.abs(da) < 1.2; };
+  if (seaA !== null){
+    data.buildings = data.buildings.filter(b => { const c = b.house ? toG(b.c) : toG(b.p[0]); return !inSea(c[0], c[1], 12); });
+    data.roads = data.roads.filter(rd => !rd.some(p => { const g = toG(p); return inSea(g[0], g[1], 8); }));
+    data.trees = data.trees.filter(p => { const g = toG(p); return !inSea(g[0], g[1], 6); });
+  }
   const bParts = [], roofParts = [], occupied = [];
   const slice = (g, gr) => { const out = new THREE.BufferGeometry();
     ["position","normal","uv"].forEach(k => { const at = g.attributes[k]; out.setAttribute(k, new THREE.BufferAttribute(at.array.slice(gr.start*at.itemSize, (gr.start+gr.count)*at.itemSize), at.itemSize)); });
@@ -1468,17 +1482,87 @@ function buildStadium(home, away){
     }
   });
   if (rParts.length) stadium.add(new THREE.Mesh(mergeGeos(rParts), lam));
+  // ---- town-type landmarks: Main Street, water tower, steeple, barns, silos, grain elevator, crop fields, water ----
+  const xParts = [], glows = [];
+  const gable = (w, d, h, x, y, z, ry, color) => { const sh = new THREE.Shape([new THREE.Vector2(-w/2, 0), new THREE.Vector2(w/2, 0), new THREE.Vector2(0, h)]);
+    const g = new THREE.ExtrudeGeometry(sh, {depth: d, bevelEnabled: false}); g.translate(0, 0, -d/2); g.rotateY(ry); g.translate(x, y, z); return paint(g.toNonIndexed(), color); };
+  const turn = (g, ry, x, z) => { g.translate(-x, 0, -z); g.rotateY(ry); g.translate(x, 0, z); return g; };
+  (data.extras || []).forEach((e, i) => {
+    const [x, z] = toG([e.x, e.y]); if (inSea(x, z, 10)) return;
+    const face = Math.atan2(50 - x, -z);           // rotate to look at the field
+    if (e.t === "shop"){
+      const w = e.w*YD, d = e.d*YD, h = e.h*YD, ry = e.f > 0 ? 0 : Math.PI;
+      xParts.push(box(w, h, d, x, h/2, z, e.c)); xParts.push(box(w + .3, .5, d + .3, x, h + .25, z, shade(e.c, .6)));
+      const fz = z + (e.f > 0 ? -1 : 1)*(d/2 + .05);
+      xParts.push(box(w*.8, 1.8, .12, x, 2.2, fz, "#2a2a30")); xParts.push(box(w*.9, .35, 1.2, x, 3.6, fz + (e.f > 0 ? -.6 : .6), i % 2 ? "#b33a2e" : "#2f5d6e"));
+      if (i % 3 !== 1) glows.push([x, 2.4, fz + (e.f > 0 ? -1 : 1), 7, "#ffcf8a", .55]);
+    } else if (e.t === "tower"){
+      const H = 30, tank = new THREE.SphereGeometry(7.2, 16, 10); tank.scale(1, .72, 1); tank.translate(x, H, z); xParts.push(paint(tank, home.c1));
+      xParts.push(cyl(7.3, 7.3, 1.4, x, H - .3, z, shade(home.c1, .7), 16));
+      for (let k = 0; k < 4; k++){ const a = k*Math.PI/2 + .78; xParts.push(cyl(.35, .35, H - 3, x + Math.cos(a)*5, (H - 3)/2, z + Math.sin(a)*5, "#8a9097", 6)); }
+      xParts.push(cyl(.5, .5, H - 3, x, (H - 3)/2, z, "#8a9097", 6));
+      const c = textCanvas(512, 128), g = c.getContext("2d"); g.fillStyle = luminance(home.c1) > .6 ? "#111" : "#fff"; g.textAlign = "center"; g.textBaseline = "middle";
+      g.font = `400 ${String(home.city || home.name).length > 10 ? 58 : 80}px ${FONT}`; g.fillText(String(home.city || home.name).toUpperCase(), 256, 68);
+      const lbl = new THREE.Mesh(new THREE.PlaneGeometry(12, 3), new THREE.MeshBasicMaterial({map: tex(c), transparent: true, toneMapped: false, fog: true}));
+      lbl.position.set(x, H + .3, z); lbl.rotation.y = face; lbl.translateZ(7.4); stadium.add(lbl);
+      glows.push([x, H + 6, z, 5, "#ff5040", .8]);
+    } else if (e.t === "church"){
+      const ry = e.ry || 0;
+      xParts.push(turn(box(11, 8, 20, x, 4, z, "#d8d2c4"), ry, x, z)); xParts.push(gable(11.6, 20.6, 5, x, 8, z, ry, "#3a3536"));
+      const sx = x + Math.sin(ry)*11, sz = z + Math.cos(ry)*11;
+      xParts.push(box(3.6, 16, 3.6, sx, 8, sz, "#d8d2c4")); const spire = new THREE.ConeGeometry(2.6, 9, 4); spire.rotateY(Math.PI/4); spire.translate(sx, 20.5, sz); xParts.push(paint(spire, "#3a3536"));
+      glows.push([sx, 12, sz, 6, "#ffe0a8", .45]);
+    } else if (e.t === "barn"){
+      const ry = e.ry || 0;
+      xParts.push(turn(box(14, 7.5, 22, x, 3.75, z, "#7a2a22"), ry, x, z)); xParts.push(gable(15, 23, 6, x, 7.5, z, ry, "#4a4440"));
+      xParts.push(turn(box(5, 5, .2, x, 2.5, z + 11.1, "#e8e0d0"), ry, x, z));
+    } else if (e.t === "silo"){
+      xParts.push(cyl(3.3, 3.3, 19, x, 9.5, z, "#b9bdc0", 14)); const dome = new THREE.SphereGeometry(3.3, 14, 6, 0, Math.PI*2, 0, Math.PI/2); dome.translate(x, 19, z); xParts.push(paint(dome, "#8e959b"));
+    } else if (e.t === "elevator"){
+      for (let k = 0; k < 4; k++) xParts.push(cyl(4.4, 4.4, 34, x + k*8.6, 17, z, "#c9c3b4", 14));
+      xParts.push(box(10, 12, 9, x + 30, 40, z, "#b8b1a2")); xParts.push(box(36, 2, 9.4, x + 13, 35, z, "#b0a998"));
+      glows.push([x + 30, 47, z, 6, "#ff5040", .7]);
+    } else if (e.t === "windmill"){
+      xParts.push(cyl(.3, 1.6, 14, x, 7, z, "#6d6a66", 4));
+      for (let k = 0; k < 12; k++){ const a = k*Math.PI/6, bl = box(.25, 2.8, .05, x, 14 + Math.cos(a)*1.6, z + Math.sin(a)*1.6, "#9aa0a6"); xParts.push(bl); }
+    }
+  });
+  if (xParts.length){ const xm = new THREE.Mesh(mergeGeos(xParts), lam); xm.receiveShadow = true; stadium.add(xm); }
+  glows.forEach(([x, y, z, sz, c, o]) => { const g = glowSprite(sz, lin(c), o); g.position.set(x, y, z); stadium.add(g); });
+  // crop fields: planted rows in a few shades so farm country reads from the bleachers
+  const CROP = {corn: ["#1f3a1c", "#122612"], wheat: ["#6e5c2c", "#564722"], soy: ["#2c4626", "#1e3320"], dirt: ["#4a3828", "#38291e"]};
+  const cropTex = {};
+  (data.crops || []).forEach(c => {
+    const [x, z] = toG([c.x, c.y]); if (inSea(x, z)) return;
+    if (!cropTex[c.k]){ const cv = textCanvas(64, 64), g = cv.getContext("2d"), [a, b] = CROP[c.k]; g.fillStyle = a; g.fillRect(0, 0, 64, 64); g.fillStyle = b; for (let k = 0; k < 64; k += 8) g.fillRect(0, k, 64, 3); cropTex[c.k] = cv; }
+    const t = tex(cropTex[c.k], true); t.repeat.set(c.w/30, c.d/4);
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(c.w*YD, c.d*YD), new THREE.MeshLambertMaterial({map: t, color: new THREE.Color(.2, .2, .2)}));
+    m.rotation.x = -Math.PI/2; m.rotation.z = c.ry; m.position.set(x, -.04, z); m.receiveShadow = true; stadium.add(m);
+  });
+  // bayou water and the ocean
+  const waterMat = new THREE.MeshPhongMaterial({color: lin(E.b === "b" ? "#0e1c18" : "#0a1830"), specular: lin("#4a6a88"), shininess: 70});
+  (data.waters || []).forEach(w => { const [x, z] = toG([w.x, w.y]); const g = new THREE.CircleGeometry(1, 28); g.scale(w.rx*YD, w.ry*YD, 1);
+    const m = new THREE.Mesh(g, waterMat); m.rotation.x = -Math.PI/2; m.rotation.z = w.a; m.position.set(x, -.03, z); stadium.add(m);
+    const gl = glowSprite(w.rx*1.4, lin("#9fb8d8"), .14); gl.position.set(x, .5, z); stadium.add(gl); });
+  if (seaA !== null){
+    const sand = new THREE.Mesh(new THREE.RingGeometry(200, 232, 48, 1, -seaA - 1.2, 2.4), new THREE.MeshLambertMaterial({color: lin("#6e6450")}));
+    sand.rotation.x = -Math.PI/2; sand.position.set(50, -.035, 0); stadium.add(sand);
+    const sea = new THREE.Mesh(new THREE.RingGeometry(228, 2950, 64, 1, -seaA - 1.2, 2.4), waterMat);
+    sea.rotation.x = -Math.PI/2; sea.position.set(50, -.02, 0); stadium.add(sea);
+    for (let k = 0; k < 7; k++){ const g = glowSprite(30 + k*10, lin("#bcd0ff"), .08); g.position.set(50 + Math.cos(seaA)*(400 + k*260), 1, Math.sin(seaA)*(400 + k*260)); stadium.add(g); }
+  }
   // trees: OSM ones plus Marin oaks and redwoods around the edges
   const treePts = data.trees.map(toG).filter(([x,z]) => !(Math.abs(x-50) < 68 && Math.abs(z) < 64));
   let seed = 7; const rnd = () => (seed = (seed*16807) % 2147483647) / 2147483647;
-  for (let i=0; i<(rural?160:300); i++){
+  for (let i=0; i<Math.round((rural?160:300)*(E.known ? BIO.n : 1)); i++){
     const a = rnd()*Math.PI*2, r = 92 + rnd()*280, x = 50 + Math.cos(a)*r, z = Math.sin(a)*r*.85;
-    if (occupied.some(([ox,oz]) => Math.abs(ox-x) < 14 && Math.abs(oz-z) < 14)) continue;
+    if (inSea(x, z, 20) || occupied.some(([ox,oz]) => Math.abs(ox-x) < 14 && Math.abs(oz-z) < 14)) continue;
     treePts.push([x,z]);
   }
   if (PROPS.ready){
     const byKind = {};
-    treePts.forEach(([x, z], i) => { const k = TREE_KINDS[(i*5 + (i >> 3)) % TREE_KINDS.length]; (byKind[k] = byKind[k] || []).push({x, z, ry: i*2.39, s: .75 + ((i*37) % 10)/18, sy: .9 + ((i*13) % 7)/20}); });
+    const kinds = E.known ? BIO.trees : TREE_KINDS;
+    treePts.forEach(([x, z], i) => { const k = kinds[(i*5 + (i >> 3)) % kinds.length]; (byKind[k] = byKind[k] || []).push({x, z, ry: i*2.39, s: .75 + ((i*37) % 10)/18, sy: .9 + ((i*13) % 7)/20}); });
     Object.entries(byKind).forEach(([k, list]) => propInstances(k, list, stadium));
     // parked cars along the streets near the field
     const cars = []; let ci = 0;
@@ -1508,20 +1592,52 @@ function buildStadium(home, away){
   const R = 1500, segs = 240, tam = data.tam ? toG(data.tam) : null;
   const tamAng = tam ? Math.atan2(tam[1], tam[0]-50) : 0, tamDistYd = tam ? Math.hypot(tam[0]-50, tam[1]) : 1;
   const tamH = tam ? R * Math.tan(Math.atan(784*YD / Math.max(tamDistYd, 800))) : 0;
-  const hp = [], hc = [], low = lin("#0e1526"), high = lin("#1b2540");
+  const HC = {d: ["#170e10", "#3a2622"], m: ["#0d1422", "#1f2a40"], p: ["#0c1220", "#161f33"], b: ["#0b1418", "#14222a"], w: ["#0b141c", "#16233a"]}[E.b] || ["#0e1526", "#1b2540"];
+  const hp = [], hc = [], low = lin(HC[0]), high = lin(HC[1]), snow = lin("#5d6882");
+  const ph = (home.key || "").length*.37;                       // each town's ridgeline is its own
+  const base = {
+    x: a => 45 + 34*Math.sin(a*3.1+1.3+ph) + 22*Math.sin(a*7.7+.4) + 10*Math.sin(a*17.3) + 4*Math.sin(a*41),
+    c: a => 30 + 22*Math.sin(a*3.1+1.3+ph) + 12*Math.sin(a*7.7+.4) + 5*Math.sin(a*17.3),
+    p: a => 13 + 5*Math.sin(a*2.3+.7+ph) + 3*Math.sin(a*9.1) + 1.5*Math.sin(a*31),
+    b: a => 11 + 4*Math.sin(a*5.1+ph) + 2*Math.sin(a*17),
+    w: a => 62 + 28*Math.sin(a*3.7+1+ph) + 14*Math.sin(a*9.3) + 6*Math.sin(a*23) + 3*Math.sin(a*57),
+    m: a => 175 + 105*Math.sin(a*2.9+.6+ph) + 65*Math.sin(a*6.7+1.9) + 42*Math.abs(Math.sin(a*13.1)) + 20*Math.abs(Math.sin(a*31.7)),
+    d: a => { const n = Math.sin(a*2.7+.4+ph) + .6*Math.sin(a*6.3+1.1) + .3*Math.sin(a*13.7); const top = Math.min(1, Math.max(0, (n - .1)/.25));
+      return 16 + 5*Math.sin(a*11) + top*(80 + 18*Math.sin(a*5.3)); },
+  };
+  const hb = E.known ? (base[E.b] || base.x) : base.x;
   const hgt = a => {
-    let h = 45 + 34*Math.sin(a*3.1+1.3) + 22*Math.sin(a*7.7+.4) + 10*Math.sin(a*17.3) + 4*Math.sin(a*41);
+    let h = hb(a);
+    if (E.view) h = Math.max(h, 150 + 80*Math.sin(a*2.6 + ph) + 45*Math.abs(Math.sin(a*9.7)) - 140*Math.max(0, Math.cos(a - ph*2)));
+    if (seaA !== null){ const da = Math.abs(Math.atan2(Math.sin(a - seaA), Math.cos(a - seaA))); h *= Math.min(1, Math.max(0, (da - 1.15)/.3)); }
     if (tam){ const da = Math.atan2(Math.sin(a-tamAng), Math.cos(a-tamAng)); h = Math.max(h, tamH*Math.exp(-(da*da)/(2*.08*.08)) + tamH*.4*Math.exp(-(da*da)/(2*.28*.28))); }
-    return Math.max(10, h);
+    return seaA !== null && h < 10 ? h : Math.max(10, h);
   };
   for (let i=0;i<segs;i++){
     const a0 = i/segs*Math.PI*2, a1 = (i+1)/segs*Math.PI*2;
     const p0 = [50+Math.cos(a0)*R, -2, Math.sin(a0)*R], p1 = [50+Math.cos(a1)*R, -2, Math.sin(a1)*R];
-    hp.push(...p0, p0[0], hgt(a0), p0[2], ...p1, ...p1, p0[0], hgt(a0), p0[2], p1[0], hgt(a1), p1[2]);
-    [low, high, low, low, high, high].forEach(c => hc.push(c.r, c.g, c.b));
+    const h0 = hgt(a0), h1 = hgt(a1), top = h => (E.b === "m" || E.view) ? high.clone().lerp(snow, Math.min(1, Math.max(0, (h - 190)/90))*.8) : high;
+    hp.push(...p0, p0[0], h0, p0[2], ...p1, ...p1, p0[0], h0, p0[2], p1[0], h1, p1[2]);
+    [low, top(h0), low, low, top(h0), top(h1)].forEach(c => hc.push(c.r, c.g, c.b));
   }
   const hg = new THREE.BufferGeometry(); hg.setAttribute("position", new THREE.Float32BufferAttribute(hp,3)); hg.setAttribute("color", new THREE.Float32BufferAttribute(hc,3));
   stadium.add(new THREE.Mesh(hg, new THREE.MeshBasicMaterial({vertexColors:true, side:THREE.DoubleSide, fog:false})));
+  // city skyline on the horizon: towers with a speckle of lit windows
+  if (E.known && (E.d === "B" || E.d === "C")){
+    const sk = [], big = E.d === "B"; let q = (home.key || "x").length*977 + 13;
+    const rq = () => (q = (q*16807) % 2147483647) / 2147483647;
+    for (let i = 0; i < (big ? 110 : 55); i++){
+      const a = rq()*Math.PI*2; if (seaA !== null && Math.abs(Math.atan2(Math.sin(a - seaA), Math.cos(a - seaA))) < 1.3) continue;
+      const R2 = 620 + rq()*520, w = 22 + rq()*40, h = big ? 35 + Math.pow(rq(), 1.6)*240 : 22 + rq()*70, d = w*(.6 + rq()*.6);
+      const g = new THREE.BoxGeometry(w, h, d), uv = g.attributes.uv, nrm = g.attributes.normal;
+      for (let k = 0; k < uv.count; k++){ const side = Math.abs(nrm.getY(k)) < .5; uv.setXY(k, uv.getX(k)*(side ? (Math.abs(nrm.getX(k)) > .5 ? d : w)/7 : 0), uv.getY(k)*(side ? h/7 : 0)); }
+      g.translate(50 + Math.cos(a)*R2, h/2 - 2, Math.sin(a)*R2); sk.push(paint(g, ["#121824", "#161d2b", "#1b2232"][i % 3]));
+    }
+    const wc = textCanvas(64, 64), wx = wc.getContext("2d"); wx.fillStyle = "#141b28"; wx.fillRect(0, 0, 64, 64);
+    for (let k = 0; k < 64; k++){ if (Math.random() < .3){ wx.fillStyle = Math.random() < .6 ? "#ffcf8a" : "#cfe0ff"; wx.fillRect((k % 8)*8 + 2, Math.floor(k/8)*8 + 2, 4, 4); } }
+    const et = tex(wc, true);
+    if (sk.length) stadium.add(new THREE.Mesh(mergeGeos(sk), new THREE.MeshBasicMaterial({map: et, fog: false, toneMapped: false})));
+  }
   // sky dome with town glow on the horizon, stars, and a moon
   const sky = new THREE.Mesh(new THREE.SphereGeometry(3500, 32, 16), new THREE.ShaderMaterial({side:THREE.BackSide, depthWrite:false, fog:false, uniforms: {dim: {value: 0}},
     vertexShader:"varying vec3 p; void main(){ p = normalize(position); gl_Position = projectionMatrix*modelViewMatrix*vec4(position,1.); }",
@@ -5793,12 +5909,133 @@ function hometown(key){
   }
   return {buildings: B, roads, trees};
 }
+/* ---------- town types ----------
+   tools/env_us.py tags every school "e": <biome><density><size>[v][sea dir], e.g. "pR1" = farm country, small school.
+   biome: c coast · d desert · m mountain · b bayou · w north woods · p farmland · x mixed green
+   density: B big city · C city · S suburb · T town · R rural (NCES locale) · size 0-3 from enrollment · v = mountains on the horizon */
+function envOf(sc){
+  const raw = sc && (sc.raw || sc), code = (raw && raw.e) || (sc && sc.e) || "";
+  const m = /^([cdmbwpx])([BCSTR])([0-3])(v?)([a-h]?)$/.exec(code);
+  if (!m) return {b: "x", d: "S", size: 2, view: false, sea: -1, known: false, lat: raw && raw.lat};
+  return {b: m[1], d: m[2], size: +m[3], view: !!m[4], sea: m[5] ? "abcdefgh".indexOf(m[5]) : -1, known: true, lat: raw && raw.lat};
+}
+function townLabel(E){
+  const L = {c: {B: "Coastal city", C: "Coastal city", S: "Beach suburb", T: "Beach town", R: "Beach town"},
+    d: {B: "Desert city", C: "Desert city", S: "Desert suburb", T: "Desert town", R: "Desert ranch country"},
+    m: {B: "Mountain city", C: "Mountain city", S: "Foothill suburb", T: "Mountain town", R: "Mountain town"},
+    b: {B: "Bayou city", C: "Bayou city", S: "Bayou suburb", T: "Bayou town", R: "Bayou country"},
+    w: {B: "City", C: "City", S: "Suburb", T: "North woods town", R: "North woods"},
+    p: {B: "Big city", C: "City", S: "Suburb", T: "Small farm town", R: "Farm town"},
+    x: {B: "Big city", C: "City", S: "Suburb", T: "Small town", R: "Country town"}};
+  return (L[E.b] || L.x)[E.d] + (E.view && E.b !== "m" ? " with a mountain view" : "");
+}
+// how each landscape looks: ground, trees, how wooded, backdrop
+function biomeOf(E){
+  const south = (E.lat || 40) < 34.5;
+  const T = {
+    x: {ground: "#1c2a1a", trees: TREE_KINDS, n: 1},
+    p: {ground: "#272d1b", trees: ["tree_oak","tree_detailed","tree_oakFall","tree_defaultFall","tree_fatFall"], n: .5},
+    d: {ground: "#5b4a33", trees: ["cactus_tall","cactus_short","bush_desert","cactus_tall","rock_tallE","bush_desert","rock_tallA"], urban: ["palm_tall","palm_detailed","palm_bend","cactus_tall"], n: .6},
+    m: {ground: "#19231a", trees: ["pine_tallB","tree_pineTall","pine_default","tree_pineRound","pine_small","pine_tallB","stone_tall"], n: 1.7},
+    w: {ground: "#152219", trees: ["pine_tallB","pine_default","tree_pineTall","pine_small","tree_detailed","tree_oakFall","pine_default"], n: 1.9},
+    b: {ground: "#17241a", trees: ["tree_tallDark","tree_tallDark","tree_detailed","tree_oak","tree_tallDark"], n: 1.3},
+    c: {ground: south ? "#4a4330" : "#22301f", trees: south ? ["palm_tall","palm_detailed","palm_bend","tree_detailed"] : ["tree_pineRound","tree_oak","pine_default","tree_detailed"], n: .8},
+  };
+  const b = T[E.b] || T.x;
+  return Object.assign({}, b, {trees: (E.d === "B" || E.d === "C" || E.d === "S") && b.urban ? b.urban : b.trees});
+}
+// what gets built around the field, by town type (meters, field at the origin, +y north)
+function townFor(key, E){
+  if (E.d === "S") return Object.assign({extras: [], crops: [], waters: []}, hometown(key));
+  let seed = 0; for (const ch of key + E.d) seed = (seed*31 + ch.charCodeAt(0)) >>> 0; seed = seed || 1;
+  const r = () => (seed = (seed*16807) % 2147483647) / 2147483647;
+  const B = [], roads = [], trees = [], extras = [], crops = [], waters = [];
+  const box = (cx, cy, w, d, h, o) => B.push(Object.assign({p: [[cx-w/2,cy-d/2],[cx+w/2,cy-d/2],[cx+w/2,cy+d/2],[cx-w/2,cy+d/2],[cx-w/2,cy-d/2]], h}, o || {}));
+  const house = (x, y, fx, fy) => { box(x, y, 10, 11, 6.5); Object.assign(B[B.length - 1], {house: true, c: [x, y], f: [fx, fy]}); };
+  const road = (x0, y0, x1, y1) => { const n = Math.max(1, Math.round(Math.hypot(x1 - x0, y1 - y0)/40)); for (let i = 0; i < n; i++) roads.push([[x0 + (x1-x0)*i/n, y0 + (y1-y0)*i/n], [x0 + (x1-x0)*(i+1)/n, y0 + (y1-y0)*(i+1)/n]]); };
+  const clear = (x, y, m = 0) => Math.abs(x) < 150 + m && Math.abs(y) < 120 + m;
+  // the school itself, past one end zone
+  const end = r() < .5 ? -1 : 1, sx = end*(118 + r()*20);
+  box(sx, -20 + r()*10, 34 + r()*16, 58, 9 + r()*3); box(sx + end*36, 10, 26, 40, 8); box(sx + end*6, 48, 44, 26, 12 + r()*3);
+  road(sx - end*30, -260, sx - end*30, 260);
+  if (E.d === "B" || E.d === "C"){
+    const big = E.d === "B", blk = big ? 92 : 80, reach = big ? 560 : 440;
+    for (let gx = -6; gx <= 6; gx++) for (let gy = -6; gy <= 6; gy++){
+      const bx = gx*blk, by = gy*blk;
+      if (clear(bx, by, 25) || Math.hypot(bx, by) > reach) continue;
+      road(bx - blk/2, by - blk/2, bx + blk/2, by - blk/2); road(bx - blk/2, by - blk/2, bx - blk/2, by + blk/2);
+      const far = Math.hypot(bx, by) / reach, n = big ? 1 + Math.floor(r()*3) : 2 + Math.floor(r()*3);
+      for (let k = 0; k < n; k++){
+        const w = big ? 22 + r()*22 : 16 + r()*16, d = big ? 22 + r()*22 : 14 + r()*16;
+        const x = bx + (r() - .5)*(blk - w - 14), y = by + (r() - .5)*(blk - d - 14);
+        const h = big ? 18 + Math.pow(r(), 1.6)*95*(.5 + far) : (r() < .35 ? 6 + r()*3 : 10 + r()*18);
+        if (!big && h < 9.5 && r() < .7){ house(x, y, 0, by > 0 ? -1 : 1); continue; }
+        box(x, y, w, d, h);
+      }
+      if (r() < .3) trees.push([bx + blk*.4, by + blk*.4]);
+    }
+    return {buildings: B, roads, trees, extras, crops, waters};
+  }
+  const rural = E.d === "R", farm = E.b === "p" || E.b === "x";
+  let ry0 = 0, rx0 = 0;
+  if (!rural){
+    // small town: a few streets of houses, Main Street, a water tower and a steeple
+    const blk = 70 + r()*10;
+    for (let gx = -4; gx <= 4; gx++) for (let gy = -3; gy <= 3; gy++){
+      const bx = gx*blk, by = gy*blk;
+      if (clear(bx, by) || Math.hypot(bx, by) > 280) continue;
+      road(bx - blk/2, by - blk/2, bx + blk/2, by - blk/2); road(bx - blk/2, by - blk/2, bx - blk/2, by + blk/2);
+      for (let k = 0; k < 4; k++){
+        const hx = bx - blk/4 + (k % 2)*blk/2, hy = by + (k < 2 ? -1 : 1)*blk/4;
+        if (r() < .25){ trees.push([hx, hy]); continue; }
+        house(hx + (r() - .5)*6, hy + (r() - .5)*6, 0, k < 2 ? -1 : 1); if (r() < .7) trees.push([hx + 8, hy + 8]);
+      }
+    }
+    const my = (r() < .5 ? -1 : 1)*(185 + r()*25), mx0 = -190 + r()*40;
+    road(mx0 - 30, my, mx0 + 330, my);
+    const SHOP = ["#7a3b2e","#8c4a32","#6b2f2a","#c9b48e","#5d6b4e","#3f5a66","#8a7a5c","#a35a3a"];
+    for (let side = -1; side <= 1; side += 2) for (let x = mx0; x < mx0 + 300; ){
+      const w = 10 + r()*8; extras.push({t: "shop", x: x + w/2, y: my + side*15, w, d: 16, h: 6.5 + r()*4.5, c: SHOP[Math.floor(r()*SHOP.length)], f: -side}); x += w + .6;
+    }
+    const wa = r()*Math.PI*2; extras.push({t: "tower", x: Math.cos(wa)*235, y: Math.sin(wa)*200});
+    const ca = wa + 2 + r()*2; extras.push({t: "church", x: Math.cos(ca)*230, y: Math.sin(ca)*190, ry: r()*Math.PI});
+    if (farm) extras.push({t: "elevator", x: mx0 + 360, y: my + (my > 0 ? 40 : -40)});
+  } else {
+    // country: a crossroads, a few farmsteads (or ranches / cabins), fields to the horizon
+    ry0 = (r() < .5 ? -1 : 1)*(170 + r()*60); rx0 = (r() < .5 ? -1 : 1)*(220 + r()*80);
+    road(-900, ry0, 900, ry0); road(rx0, -900, rx0, 900);
+    const n = 3 + Math.floor(r()*4);
+    for (let i = 0; i < n; i++){
+      const a = r()*Math.PI*2, d = 220 + r()*300, x = Math.cos(a)*d, y = Math.sin(a)*d*.8;
+      if (clear(x, y, 40)) continue;
+      house(x, y, -Math.cos(a), -Math.sin(a));
+      if (E.b !== "d" && E.b !== "m" && E.b !== "w") extras.push({t: "barn", x: x + 26, y: y + 8, ry: a});
+      if (farm && r() < .8) extras.push({t: "silo", x: x + 40, y: y - 8}), r() < .5 && extras.push({t: "silo", x: x + 48, y: y - 6});
+      for (let k = 0; k < 4; k++) trees.push([x - 14 + k*6, y - 16]);
+    }
+    if (farm && r() < .6) extras.push({t: "elevator", x: rx0 + 30, y: ry0 + 40});
+    if (E.b === "d") for (let i = 0; i < 2; i++) extras.push({t: "windmill", x: (r() - .5)*700, y: (r() < .5 ? -1 : 1)*(180 + r()*200)});
+  }
+  if (farm || E.b === "c"){
+    const KINDS = ["corn","corn","wheat","soy","dirt","wheat"];
+    for (let i = 0; i < (rural ? 16 : 8); i++){
+      const a = r()*Math.PI*2, d = (rural ? 170 : 300) + r()*(rural ? 520 : 320), x = Math.cos(a)*d, y = Math.sin(a)*d;
+      if (clear(x, y, 30)) continue;
+      crops.push({x, y, w: 70 + r()*120, d: 60 + r()*110, ry: (r() < .5 ? 0 : Math.PI/2) + (r() - .5)*.1, k: KINDS[Math.floor(r()*KINDS.length)]});
+    }
+    // windbreaks: straight tree lines along the section roads
+    if (rural) for (let k = 0; k < 18; k++) trees.push([-400 + k*12, ry0 + 9]);
+  }
+  if (E.b === "b") for (let i = 0; i < 9; i++){ const a = r()*Math.PI*2, d = 140 + r()*330; waters.push({x: Math.cos(a)*d, y: Math.sin(a)*d, rx: 25 + r()*55, ry: 18 + r()*40, a: r()*3}); }
+  return {buildings: B, roads, trees, extras, crops, waters};
+}
 function stadiumFromRaw(raw){
   const f = raw && raw.f;
   const rect = ([cx, cy, w, d, a, h]) => { const c = Math.cos(a), s = Math.sin(a), pts = [[-w/2,-d/2],[w/2,-d/2],[w/2,d/2],[-w/2,d/2],[-w/2,-d/2]];
     return {p: pts.map(([x,y]) => [cx + x*c - y*s, cy + x*s + y*c]), h: h || 7.5}; };
-  const town = raw && raw.b && raw.b.length ? null : hometown((raw && (raw.k || raw.n)) || "school");
-  return {natl: true, stock: !f, surface: f ? (f.s || "grass") : "grass", track: f && f.trk ? [] : null, buildings: town ? town.buildings : raw.b.map(rect), trees: town ? town.trees : ((raw && raw.t) || []), roads: town ? town.roads : [], stands: [], field: []};
+  const env = envOf(raw), town = raw && raw.b && raw.b.length ? null : townFor((raw && (raw.k || raw.n)) || "school", env);
+  return {natl: true, stock: !f, env, surface: f ? (f.s || "grass") : "grass", track: f && f.trk ? [] : null, buildings: town ? town.buildings : raw.b.map(rect), trees: town ? town.trees : ((raw && raw.t) || []), roads: town ? town.roads : [],
+    extras: town ? town.extras : [], crops: town ? town.crops : [], waters: town ? town.waters : [], stands: [], field: []};
 }
 async function loadStadium(sch){
   if (sch.stadium) return sch.stadium;
@@ -5898,6 +6135,7 @@ function openSetup(){
   m.append(tm(G.away,false), vs, tm(G.home,true));
   const rec = getRecord(); $("setupRecord").textContent = rec[0] + rec[1] + rec[2] ? `Your record in this matchup: ${rec[0]}-${rec[1]}${rec[2] ? "-" + rec[2] : ""}` : "First meeting. Make it count.";
   $("colorNote").textContent = G.home.cs === "generated" ? `We don't know ${G.home.name}'s colors yet. Set them below and the game will remember.` : `${G.home.name} colors. Wrong? Fix them below.`;
+  const TE = envOf(G.home); $("setupTown").textContent = TE.known ? `🏟 ${townLabel(TE).toUpperCase()} · ${["SMALL","MID-SIZE","BIG","HUGE"][TE.size]} STANDS` : "";
   renderColorEditor();
   const kd = document.createElement("div"); kd.style.marginTop = "10px"; $("colorEdit").appendChild(kd);
   if (isPro()){ const h4 = document.createElement("h4"); h4.className = "hh"; h4.textContent = "UNIFORM DESIGNER"; kd.appendChild(h4); const d = document.createElement("div"); kd.appendChild(d); renderKitDesigner(d, G.home, () => { openSetup(); $("colorEdit").closest("details").open = true; }); }
