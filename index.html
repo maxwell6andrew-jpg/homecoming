@@ -38,6 +38,12 @@ html,body{height:100%;margin:0;background:var(--ink);color:var(--chrome);font-fa
 #rotate .rphone i{position:absolute;left:50%;bottom:5px;width:10px;height:4px;margin-left:-5px;background:var(--chrome);border-radius:2px}
 @keyframes rot{0%,25%{transform:rotate(0)}55%,85%{transform:rotate(-90deg)}100%{transform:rotate(0)}}
 @media (orientation:portrait) and (pointer:coarse){#rotate{display:flex}}
+#aimUI{position:fixed;left:0;top:0;width:0;height:0;pointer-events:none;z-index:14}
+#aimUI[hidden]{display:none}
+#aimUI i{position:absolute;left:0;top:0;border-radius:50%;transform:translate(-50%,-50%);box-sizing:border-box}
+#aimUI .tgt{width:46px;height:46px;border:4px solid rgba(255,255,255,.9);box-shadow:0 0 0 2px rgba(0,0,0,.55),inset 0 0 0 2px rgba(0,0,0,.4)}
+#aimUI .ring{width:46px;height:46px;border:6px solid #ffd23a;box-shadow:0 0 10px rgba(0,0,0,.6)}
+#aimUI b{position:absolute;left:0;top:34px;transform:translateX(-50%);font:400 18px var(--pixh,monospace);color:#38e07b;text-shadow:2px 2px 0 #000;white-space:nowrap;opacity:0}
 #pro{position:fixed;inset:0;z-index:61;display:flex;align-items:center;justify-content:center;background:rgba(4,6,20,.72);padding:10px}
 #pro[hidden]{display:none}
 #pro .awin{width:min(540px,100%);max-height:100%;overflow:auto;background:linear-gradient(#2d4fd6,#14238a);border:3px solid #e9eefc;border-radius:12px;box-shadow:0 0 0 3px #0b1033;padding:12px 18px 14px;text-align:center;font-family:"DotGothic16",var(--body);color:#fff}
@@ -510,6 +516,7 @@ button:focus-visible{outline:none}
 </section>
 <div id="coach" hidden><div class="cwin"><div class="ck">COACH SAYS</div><div class="ct" id="coachT"></div><div class="cb" id="coachB"></div><button class="big" id="coachGo">GOT IT</button></div></div>
 <div id="rotate" aria-live="polite"><div class="rphone"><i></i></div><b>Turn your phone sideways</b><small>Homecoming plays in landscape.</small></div>
+<div id="aimUI" hidden><i class="tgt"></i><i class="ring"></i><b>LET GO!</b></div>
 <div id="pro" hidden><div class="awin" role="dialog" aria-modal="true" aria-labelledby="proT"><div class="ak">HOMECOMING PRO</div><div class="at" id="proT"></div><div id="proB"></div></div></div>
 <div id="a2hs" hidden><div class="awin"><div class="ak">BEST EXPERIENCE</div><div class="at">Put Homecoming on your home screen</div>
   <div class="ab" id="a2hsSteps"></div>
@@ -1237,7 +1244,7 @@ function sidelinePlayer(jersey, pants, helmet, num){
 }
 
 // broadcast glare on a light bank: a horizontal lens streak, and a faint cone of haze falling toward the field
-let HAZE_MAT = null;
+let HAZE_MAT = null, NET_TEX = null; const _aimV = new THREE.Vector3();
 function towerFx(lx, y, z, s){
   const st = glowSprite(1, lin("#ffe9c4"), .35); st.scale.set(90, 3.2, 1); st.position.set(lx, y, z - s*.5); stadium.add(st);
   HAZE_MAT = HAZE_MAT || new THREE.ShaderMaterial({transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, fog: false, toneMapped: false,
@@ -1350,6 +1357,15 @@ function buildStadium(home, away){
     parts.push(cyl(.08,.08,7.2,gx,6.9,-3.9,"#f2c21b")); parts.push(cyl(.08,.08,7.2,gx,6.9,3.9,"#f2c21b"));
     parts.push(box(.06,.6,.25,gx,10.6,-3.9,"#ff6a2a")); parts.push(box(.06,.6,.25,gx,10.6,3.9,"#ff6a2a"));
   });
+  // kicking nets behind each goalpost: two poles and netting the kick lands in
+  if (!NET_TEX){ const c = textCanvas(64, 64), x = c.getContext("2d"); x.strokeStyle = "rgba(235,238,242,.75)"; x.lineWidth = 2;
+    for (let k = 0; k <= 64; k += 16){ x.beginPath(); x.moveTo(k, 0); x.lineTo(k, 64); x.moveTo(0, k); x.lineTo(64, k); x.stroke(); } NET_TEX = c; }
+  [-10, 110].forEach(gx => { const nx = gx + Math.sign(gx - 50)*NET_BACK;
+    [-9, 9].forEach(z => parts.push(cyl(.09, .11, 13, nx, 6.5, z, "#c9ccd1", 6)));
+    parts.push(box(.08, .08, 18.2, nx, 12.6, 0, "#c9ccd1"));
+    const t = tex(NET_TEX, true); t.repeat.set(18/1.1, 10.4/1.1);
+    const net = new THREE.Mesh(new THREE.PlaneGeometry(18, 10.4), new THREE.MeshBasicMaterial({map: t, transparent: true, alphaTest: .2, side: THREE.DoubleSide, toneMapped: false, opacity: .9}));
+    net.position.set(nx, 7.4, 0); net.rotation.y = Math.PI/2; stadium.add(net); });
   // pylons
   [0,100,-10,110].forEach(px => [-HALF_W, HALF_W].forEach(pz => shadowParts.push(box(.2,.6,.2,px,.3,pz + Math.sign(pz)*.1,"#ff6a1f"))));
   // team benches on each sideline
@@ -1856,8 +1872,15 @@ function iconSprite(i){
   x.beginPath(); x.arc(32,32,27,0,7); x.fillStyle = colors[i]; x.fill(); x.lineWidth = 5; x.strokeStyle = "#000"; x.stroke();
   x.font = "700 46px Teko, Impact, sans-serif"; x.textAlign="center"; x.textBaseline="middle"; x.fillStyle="#000"; x.fillText(String(i+1), 32, 37);
   const s = new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c), depthTest:false, transparent:true, toneMapped:false}));
-  s.scale.set(1.1,1.1,1); s.renderOrder = 10; s.visible = false; dynamic.add(s); return s;
+  s.scale.set(1.1,1.1,1); s.renderOrder = 10; s.visible = false; dynamic.add(s);
+  // openness halo behind the number: green open, yellow tight, red covered
+  if (!HALO_TEX){ const h = textCanvas(64, 64), y = h.getContext("2d"); const g = y.createRadialGradient(32, 32, 14, 32, 32, 31);
+    g.addColorStop(0, "rgba(255,255,255,0)"); g.addColorStop(.55, "rgba(255,255,255,1)"); g.addColorStop(1, "rgba(255,255,255,0)"); y.fillStyle = g; y.fillRect(0, 0, 64, 64); HALO_TEX = new THREE.CanvasTexture(h); }
+  s.halo = new THREE.Sprite(new THREE.SpriteMaterial({map: HALO_TEX, depthTest: false, transparent: true, toneMapped: false, opacity: .95}));
+  s.halo.scale.set(1.9, 1.9, 1); s.halo.renderOrder = 9; s.halo.visible = false; dynamic.add(s.halo);
+  return s;
 }
+let HALO_TEX = null;
 
 /* ---------- skinned athletes on the Microsoft Rocketbox skeleton and motion capture (MIT) ----------
    The visible bodies are generated toon meshes (below). If anything fails to load, the game keeps
@@ -2849,7 +2872,7 @@ function throwTo(qb, r, away=false, q=0){
   G.windup = {qb, r, away, q, t:.15}; qb.throwT = .35;
   G.icons.forEach(s => s.visible = false); $("recv").hidden = true;
 }
-const AIM_PERFECT = .5, AIM_WINDOW = .24;
+const AIM_PERFECT = .5, AIM_WINDOW = .3;
 /* ---------- player ratings: every man on the field has one (arcade-sim style) ----------
    In Coach Mode your starters bring their own overall; opponents use their team rating with a stable
    spread so every team has a couple of stars and a weak spot. Quick Game: you are a 72, the CPU is set
@@ -2897,7 +2920,7 @@ function startAim(i){
   if (G.phase !== "live" || G.poss !== 0 || !G.carrier || G.carrier.role !== "QB" || G.sub !== "pre" || G.windup || G.aim || !G.targets) return;
   if (!G.targets[i]) return;
   G.aim = {i, r: G.targets[i], t: 0}; G.aimRing.visible = true; SFX.tick();
-  tip("aim", "Hold, then let go when the ring <b>closes on the circle</b>. Early throws fall short, late ones sail.");
+  tip("aim", "Hold, then let go when the ring <b>closes on the circle</b> and turns <b style='color:#38e07b'>green</b>. Early throws fall short, late ones sail. Green receiver icons are open.");
 }
 function releaseAim(){
   const a = G.aim; if (!a) return; G.aim = null; G.aimRing.visible = false;
@@ -2908,21 +2931,24 @@ function releaseAim(){
 }
 function releaseThrow(qb, r, away, q=0){
   const d = dirOf(qb.team);
-  const v = 22; let tx = r.x, tz = r.z, T = .3;
-  for (let i=0;i<4;i++){ const dd = Math.hypot(tx-qb.x, tz-qb.z); T = dd/v + .12; const f = predictRoute(r, T); tx = f.x; tz = f.z; }
+  // a real zip on it: short throws are lasers, long ones a little more air
+  const vOf = dd => clamp(26 + dd*.14, 26, 33); let tx = r.x, tz = r.z, T = .3;
+  for (let i=0;i<4;i++){ const dd = Math.hypot(tx-qb.x, tz-qb.z); T = dd/vOf(dd) + .08; const f = predictRoute(r, T); tx = f.x; tz = f.z; }
   const [rush, rd] = nearest(teams[1-qb.team], qb);
   const pressure = rd < 2.6 ? (2.6 - rd)/2.6 : 0, moving = Math.hypot(qb.vx,qb.vz)/qb.maxSpeed, dd = Math.hypot(tx-qb.x, tz-qb.z);
-  const sigma = (.28 + dd*.026 + pressure*1.4 + moving*.6) * (qb.team === 1 ? 1.5 : 1) * clamp(1 - (RAT(qb) - 70)*.012, .7, 1.45);
+  const sigma = (.2 + dd*.02 + pressure*1.3 + moving*.55) * (qb.team === 1 ? 1.5 : 1) * clamp(1 - (RAT(qb) - 70)*.012, .7, 1.45);
   if (away){ tz = Math.sign(qb.z || 1) * 32; tx = qb.x + 6*d; }
   else {
     // release timing: early throws die behind the receiver, late ones sail past him
-    const ux = tx - r.x, uz = tz - r.z, um = Math.hypot(ux, uz) || 1, miss = q * (3.6 + dd*.05);
+    // a near-perfect release is right on him; a red one (way early / way late) sails or dies well away from him
+    const aq = Math.abs(q), ux = tx - r.x, uz = tz - r.z, um = Math.hypot(ux, uz) || 1, miss = Math.sign(q)*Math.max(0, aq - .25) * (3 + dd*.045) * (aq > .9 ? 1.9 : 1);
+    if (aq > .9){ tz += gauss()*1.6; }
     const dirx = um > .5 ? ux/um : (tx - qb.x)/dd, dirz = um > .5 ? uz/um : (tz - qb.z)/dd;
     tx += dirx*miss + gauss()*sigma; tz += dirz*miss + gauss()*sigma*.8;
   }
-  T = Math.hypot(tx-qb.x, tz-qb.z)/v + .1;
+  const fd = Math.hypot(tx-qb.x, tz-qb.z); T = fd/vOf(fd) + .06;
   G.ball.held = null; G.carrier = null; G.sub = "air";
-  G.ball.air = {sx: qb.x, sz: qb.z, tx, tz, t:0, T, apex: 1 + T*T*4.2, target: r, thrower: qb, react: 0};
+  G.ball.air = {sx: qb.x, sz: qb.z, tx, tz, t:0, T, apex: .7 + T*T*2.6, target: r, thrower: qb, react: 0};
   r.track = true;
   G.target.visible = true; G.target.position.set(tx, .05, tz);
   SFX.throw();
@@ -3906,10 +3932,12 @@ function updateKick(dt){
     k.doinkChecked = true;
     if (pz > 3.2 && pz < 4.6 && G.ball.y > 3.4 && PHYS.R){ k.doink = true; G.ball.z = Math.sign(G.ball.z)*3.8; sfx("pads", 1, 1.5); bigMoment(.3, .5); }
   }
-  if (u < 1 && !k.doink) return;
+  // the kick reaches the net: hand it to the physics just in front of it so it smacks the netting and drops
+  const netHit = !k.short && !k.doink && (G.ball.x - (gxp + dirOf(G.fg.team)*(NET_BACK - .7)))*dirOf(G.fg.team) > 0 && Math.abs(G.ball.z) < 9 && G.ball.y < 12.4;
+  if (u < 1 && !k.doink && !netHit) return;
   const kt = G.fg.team, pat = G.fg.pat; G.fg = null; G.kick = null;
   G.phase = "dead";
-  physBall({x: PHYS.vel.x*.8, y: PHYS.vel.y*.8, z: PHYS.vel.z*.8}, 3, {x: (k.tx > k.sx ? 1 : -1)*14, y: 0, z: 0});
+  physBall({x: PHYS.vel.x*.8, y: PHYS.vel.y*.8, z: PHYS.vel.z*.8}, 3, {x: (k.tx > k.sx ? 1 : -1)*(netHit ? 2 : 5), y: 0, z: 0});
   if (k.good){
     G.score[kt] += pat ? 1 : 3; crowdTo(kt === 0 ? 1 : .2);
     banner(pat ? "PAT GOOD" : "IT'S GOOD!", pat ? "" : `${Math.round(k.dist)}-yard field goal`);
@@ -4065,9 +4093,21 @@ function syncMeshes(dt){
     if (u){ G.ring.position.set(u.x, .05, u.z); G.ring.material.color.set(u === G.carrier ? 0xffd23a : 0x6fe3ff); G.ring.scale.setScalar(1 + Math.sin(performance.now()/160)*.06); }
     if (G.targets) G.targets.forEach((r,i) => { const s = G.icons[i]; s.position.set(r.x, 2.75, r.z); });
     if (G.targets) G.icons.forEach((s, i) => { if (i >= G.targets.length) s.visible = false; });
-    if (G.aim && G.aimRing){ const r = G.aim.r, t = G.aim.t, sc = 1.1 * (t < AIM_PERFECT ? 1 + (AIM_PERFECT - t)*5 : Math.max(.25, 1 - (t - AIM_PERFECT)*1.6));
-      G.aimRing.position.set(r.x, 2.75, r.z); G.aimRing.scale.set(sc, sc, 1);
-      const off = Math.abs(t - AIM_PERFECT)/aimWin(); G.aimRing.material.color.set(off < .2 ? 0x38e07b : off < .7 ? 0xffd23a : 0xff4d2e); }
+    // throw timing: a big screen-space ring closes onto the target circle over the receiver (crisp at any resolution)
+    const aui = $("aimUI");
+    if (G.aim){ const r = G.aim.r, t = G.aim.t, sc = t < AIM_PERFECT ? 1 + (AIM_PERFECT - t)*5 : Math.max(.3, 1 - (t - AIM_PERFECT)*1.6);
+      const v = _aimV.set(r.x, 2.2, r.z).project(camera), cv = renderer.domElement.getBoundingClientRect();
+      aui.style.transform = `translate(${cv.left + (v.x*.5 + .5)*cv.width}px, ${cv.top + (-v.y*.5 + .5)*cv.height}px)`;
+      const off = Math.abs(t - AIM_PERFECT)/aimWin(), col = off < .25 ? "#38e07b" : off < .75 ? "#ffd23a" : "#ff4d2e";
+      const ring = aui.children[1]; ring.style.width = ring.style.height = `${46*sc}px`; ring.style.borderColor = col;
+      aui.children[0].style.borderColor = off < .25 ? "#38e07b" : "rgba(255,255,255,.9)"; aui.children[2].style.opacity = off < .25 ? 1 : 0;
+      aui.hidden = false; if (G.aimRing) G.aimRing.visible = false;
+    } else if (!aui.hidden) aui.hidden = true;
+    // who's open: receiver icons glow green (open), yellow (tight) or red (covered)
+    if (G.targets && G.sub === "pre" && G.poss === 0) G.targets.forEach((r, i) => { const s = G.icons[i]; if (!s || !s.visible) return;
+      const [, dd] = nearest(teams[1], r, p => p.down <= 0 && !/^D[LE]/.test(p.role));
+      s.halo.material.color.set(dd > 3 ? 0x38ff6a : dd > 1.8 ? 0xffd23a : 0xff3b2e); s.halo.position.copy(s.position); s.halo.visible = true; });
+    if (G.icons) G.icons.forEach(s => { if (s.halo && (!s.visible || G.sub !== "pre")) s.halo.visible = false; });
     if (G.chainA){
       const z = -(HALF_W + 2.2), on = markers && G.phase !== "replay";
       const fd2 = clamp(fd, 0, 100);
@@ -6448,6 +6488,7 @@ function physLoad(){
   if (PHYS.loading) return PHYS.loading;
   return PHYS.loading = import(RAPIER_URL).then(async R => { await R.init(); PHYS.R = R; }).catch(e => console.warn("physics unavailable", e));
 }
+const NET_BACK = 2.4;   // yards behind the goal line
 function physWorld(){
   const R = PHYS.R; if (!R) return null; if (PHYS.world) return PHYS.world;
   const w = new R.World({x: 0, y: -PHYS.g, z: 0});
@@ -6457,6 +6498,8 @@ function physWorld(){
   [-10, 110].forEach(gx => {
     w.createCollider(R.ColliderDesc.capsule(3.89, .1).setTranslation(gx, 3.34, 0).setRotation(flat).setRestitution(.65));
     [-3.89, 3.89].forEach(z => w.createCollider(R.ColliderDesc.capsule(3.4, .08).setTranslation(gx, 6.74, z).setRestitution(.65)));
+    // kicking net behind the posts: soft, so the ball dies in it and drops
+    w.createCollider(R.ColliderDesc.cuboid(.08, 5.2, 9).setTranslation(gx + Math.sign(gx - 50)*NET_BACK, 7.4, 0).setRestitution(.04).setFriction(1));
   });
   // a football is a prolate spheroid, so its bounces are honestly unpredictable: use the ball mesh's own hull
   const pos = G.ballMesh.geometry.attributes.position.array; PHYS.hull = new Float32Array(pos);
