@@ -665,10 +665,10 @@ if (ANALYTICS.code && !window.HC_PORTAL){ const sc = document.createElement("scr
 const DATA_BASE = window.HC_PORTAL ? "https://homecoming.football/" : "";
 // CrazyGames SDK: init once, then loading / gameplay events, happy moments, and their site-wide mute button
 const CG = {ready: null};
-function cg(fn){ if (window.HC_PORTAL !== "crazygames" || !window.CrazyGames) return; CG.ready.then(ok => { if (ok) try { fn(CrazyGames.SDK); } catch(e){} }); }
+function cgSDK(fn){ if (window.HC_PORTAL !== "crazygames" || !window.CrazyGames) return; CG.ready.then(ok => { if (ok) try { fn(CrazyGames.SDK); } catch(e){} }); }
 if (window.HC_PORTAL === "crazygames" && window.CrazyGames){
   CG.ready = CrazyGames.SDK.init().then(() => true, () => false);
-  cg(sdk => { sdk.game.loadingStart();
+  cgSDK(sdk => { sdk.game.loadingStart();
     // their mute wins while it's on; the player's own SOUND setting comes back when it's off (not saved over)
     const mute = st => { CG.muted = !!(st && st.muteAudio); sound = !CG.muted && store.get("hc_sound") !== "off";
       try { if (MUS.master && AC) MUS.master.gain.setTargetAtTime(sound ? 1 : 0, AC.currentTime, .05); } catch(e){}
@@ -767,10 +767,10 @@ function updateProBtn(){ const b = $("proBtn"); if (b) b.textContent = isPro() ?
 function proGate(feature, fn){ if (isPro()) return fn(); openPro(feature); }
 function adAfterGame(done){
   if (window.HC_PORTAL === "crazygames"){   // the portal's own ad break; never during play (off in CrazyGames "basic launch": HC_PORTAL_ADS)
-    if (!window.HC_PORTAL_ADS){ cg(sdk => sdk.game.gameplayStop()); return done && done(); }
+    if (!window.HC_PORTAL_ADS){ cgSDK(sdk => sdk.game.gameplayStop()); return done && done(); }
     const SDK = window.CrazyGames && CrazyGames.SDK, go = () => { if (MUS.master && AC) MUS.master.gain.setTargetAtTime(sound ? 1 : 0, AC.currentTime, .1); done && done(); };
     if (!SDK || G.tutorialGame) return go();
-    try { cg(sdk => sdk.game.gameplayStop()); SDK.ad.requestAd("midgame", {adStarted: () => { if (MUS.master && AC) MUS.master.gain.setTargetAtTime(0, AC.currentTime, .05); }, adFinished: go, adError: go}); } catch(e){ go(); }
+    try { cgSDK(sdk => sdk.game.gameplayStop()); SDK.ad.requestAd("midgame", {adStarted: () => { if (MUS.master && AC) MUS.master.gain.setTargetAtTime(0, AC.currentTime, .05); }, adFinished: go, adError: go}); } catch(e){ go(); }
     return;
   }
   const games = +(store.get("hc_games") || 0) + 1; store.set("hc_games", String(games));
@@ -825,7 +825,7 @@ const SFX = {
   throw(){ noise(.12,.25,2200); },
   catch(){ if (!sfx("catch", .8)) { tone("triangle",520,700,.06,.12); noise(.05,.3,1800); } },
   juke(){ noise(.14,.35,3000); tone("sine",400,900,.12,.05); },
-  td(){ jingle("td"); cg(sdk => sdk.game.happytime()); },
+  td(){ jingle("td"); cgSDK(sdk => sdk.game.happytime()); },
   tick(){ if (!sfx("click", .5)) tone("square",1200,1200,.03,.04); },
   kick(){ if (!sfx("kick", 1)) { noise(.1,.8,500); tone("sine",120,60,.12,.3); } },
   boo(){ tone("sawtooth",140,90,.7,.05); },
@@ -2569,7 +2569,7 @@ function weatherTick(dt){
 
 function startGame(){
   track(G.career ? "game-start-career" : "game-start");
-  cg(sdk => sdk.game.gameplayStart());
+  cgSDK(sdk => sdk.game.gameplayStart());
   audioInit();
   if (G.userIsHome === undefined) G.userIsHome = true;
   buildStadium(venue(), visitor());
@@ -3720,7 +3720,7 @@ function finish(){
   G.shareText = won0 ? `I beat ${G.away.name} ${G.score[0]}-${G.score[1]} on ${G.home.name}'s real field in Homecoming. Think you can do better? 🏈 ${link}`
     : `${G.home.name} ${G.score[0]}, ${G.away.name} ${G.score[1]}${G.ot ? " (OT)" : ""} on our real field in Homecoming. Your turn 🏈 ${link}`;
   G.shareLink = link; $("copyBtn").textContent = navigator.share ? "SHARE CHALLENGE" : "COPY CHALLENGE LINK";
-  track(won0 ? "game-win" : "game-loss"); if (won0) cg(sdk => sdk.game.happytime());
+  track(won0 ? "game-win" : "game-loss"); if (won0) cgSDK(sdk => sdk.game.happytime());
   showScreen("final"); setTimeout(() => jingle(won ? "victory" : tie ? "chapter" : "loss"), 250);
 }
 
@@ -6321,7 +6321,8 @@ $("careerBtn").addEventListener("click", () => { audioInit(); SFX.tick(); openCa
 $("proBtn").addEventListener("click", () => { audioInit(); SFX.tick(); openPro(); });
 if (window.HC_PORTAL){   // portal: no store, and links stay inside the game (attribution kept as plain text)
   $("proBtn").hidden = true;
-  document.querySelectorAll(".credit a").forEach(a => { const t = document.createElement("span"); t.textContent = a.textContent; a.replaceWith(t); });
+  document.querySelectorAll(".credit a").forEach(a => { if (/pro\.html/.test(a.getAttribute("href") || "")){ const sep = a.previousSibling; a.remove(); if (sep && sep.nodeType === 3) sep.textContent = sep.textContent.replace(/·\s*$/, ""); return; }
+    const t = document.createElement("span"); t.textContent = a.textContent; a.replaceWith(t); });
 }
 updateProBtn(); setTimeout(proRecheck, 4000);
 // back from checkout (Lemon Squeezy's "Back to Homecoming" button lands on ?pro=1): open the key box
@@ -6356,7 +6357,7 @@ $("copyBtn").addEventListener("click", () => {
   try { navigator.clipboard.writeText(G.shareText).then(done, () => { $("copyBtn").textContent = G.shareText; }); } catch(e){ $("copyBtn").textContent = G.shareText; }
 });
 function quitToMenu(toPick){
-  cg(sdk => sdk.game.gameplayStop());
+  cgSDK(sdk => sdk.game.gameplayStop());
   if (G.career){ G.career = null; G.tutorialGame = false; G.userIsHome = true; if (CAR){ G.paused = false; G.phase = "menu"; $("tossPanel").hidden = true; $("hud").hidden = true; $("menuBtn").hidden = true; $("fsBtn").hidden = true; $("ctrl").hidden = true; $("playcall").hidden = true; return openOffice(); } }
   G.paused = false; G.phase = "menu"; $("tossPanel").hidden = true; G.cut = null; $("hud").hidden = true; $("menuBtn").hidden = true; $("fsBtn").hidden = true; $("padHint").hidden = true; $("ctrl").hidden = true; $("playcall").hidden = true;
   if (toPick && pickState.state){ pickState.step = pickState.region ? 2 : 1; renderPick(); showScreen("pick"); } else showScreen("title");
@@ -6685,6 +6686,6 @@ function frame(now){
 loadRig();
 function backdrop(){ G.home = SCHOOLS[3]; G.away = SCHOOLS[6]; buildStadium(G.home, G.away); G.weather = "clear"; applyWeather(); G.weather = null; G.home = null; G.away = null; }
 const fontsReady = Promise.race([Promise.all(["400 40px Graduate","700 40px Teko","600 20px 'Barlow Semi Condensed'"].map(f => document.fonts.load(f))), new Promise(r => setTimeout(r, 2500))]).catch(()=>{});
-Promise.all([fontsReady, Promise.race([RIG.loading, new Promise(r => setTimeout(r, 4000))])]).then(backdrop).then(() => cg(sdk => sdk.game.loadingStop()));
+Promise.all([fontsReady, Promise.race([RIG.loading, new Promise(r => setTimeout(r, 4000))])]).then(backdrop).then(() => cgSDK(sdk => sdk.game.loadingStop()));
 requestAnimationFrame(frame);
 </script>
