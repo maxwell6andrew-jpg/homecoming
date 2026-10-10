@@ -1305,11 +1305,16 @@ function buildStadium(home, away){
     parts.push(box(len, .08, .08, cx, top+1.15, side*(z0 + rows*.9), SC.rail)); // rail
     return {cx, len, rows, side, z0};
   };
-  const homeStands = bleacher(50, SZ.len, SZ.h, 1, 53.5), awayStands = bleacher(50, SZ.alen, SZ.a, -1, 53.5);
+  const RS = data.realStands || {}, rows = d => Math.max(4, Math.min(18, Math.round(d*YD/.9)));
+  const HS = RS.home ? {cx: clamp(50 + RS.home[2]*YD, 30, 70), len: clamp(RS.home[0]*YD, 22, 96), h: rows(RS.home[1])} : {cx: 50, len: SZ.len, h: SZ.h};
+  const AS = RS.away ? {cx: clamp(50 + RS.away[2]*YD, 30, 70), len: clamp(RS.away[0]*YD, 18, 80), a: rows(RS.away[1])} : {cx: 50, len: SZ.alen, a: SZ.a};
+  SZ.h = HS.h;
+  const homeStands = bleacher(HS.cx, HS.len, HS.h, 1, 53.5), awayStands = bleacher(AS.cx, AS.len, AS.a, -1, 53.5);
   const pbY = SZ.h*.45 + 1.2, pbZ = 53.5 + SZ.h*.9 + 2.2;
   const pbW = Math.min(26, SZ.len*.45);
-  parts.push(box(pbW, 3.6, 4.4, 50, pbY+1.8, pbZ, wood ? "#c9b896" : "#dcd6c8")); parts.push(box(pbW + .8, .5, 5.2, 50, pbY+3.85, pbZ, shade(home.c1,.85)));
-  parts.push(box(pbW - 2, 1.2, .1, 50, pbY+2.2, pbZ-2.25, "#1a2433")); // press box glass band
+  const pbX = homeStands.cx, pbW2 = Math.min(pbW, homeStands.len*.45);
+  parts.push(box(pbW2, 3.6, 4.4, pbX, pbY+1.8, pbZ, wood ? "#c9b896" : "#dcd6c8")); parts.push(box(pbW2 + .8, .5, 5.2, pbX, pbY+3.85, pbZ, shade(home.c1,.85)));
+  parts.push(box(pbW2 - 2, 1.2, .1, pbX, pbY+2.2, pbZ-2.25, "#1a2433")); // press box glass band
   // fence with chain-link texture around the track
   const flC = textCanvas(64,64), fx = flC.getContext("2d"); fx.strokeStyle = "rgba(200,205,210,.9)"; fx.lineWidth = 2;
   for (let i=-64;i<128;i+=16){ fx.beginPath(); fx.moveTo(i,0); fx.lineTo(i+64,64); fx.moveTo(i+64,0); fx.lineTo(i,64); fx.stroke(); }
@@ -1422,7 +1427,9 @@ function buildStadium(home, away){
   // ---- real surroundings from OpenStreetMap ----
   const toG = p => [50 + p[0]*YD, -p[1]*YD];
   // coast: the ocean fills the side of town where the terrain says it is (8 compass points, east first, counterclockwise)
-  const seaA = E.b === "c" && E.sea >= 0 ? -E.sea*Math.PI/4 : null;
+  // compass bearing (east = 0, counterclockwise) into this field's frame: real surroundings are turned to the field's axis and maybe mirrored
+  const seaF = E.b === "c" && E.sea >= 0 ? E.sea*Math.PI/4 - (data.rot || 0)*Math.PI/180 : null;
+  const seaA = seaF === null ? null : -(data.flip ? -seaF : seaF);
   const inSea = (x, z, pad = 0) => { if (seaA === null) return false; const dx = x - 50, r = Math.hypot(dx, z); if (r < 430 - pad) return false;
     const da = Math.atan2(Math.sin(Math.atan2(z, dx) - seaA), Math.cos(Math.atan2(z, dx) - seaA)); return Math.abs(da) < 1.2; };
   if (seaA !== null){
@@ -1530,7 +1537,7 @@ function buildStadium(home, away){
   if (xParts.length){ const xm = new THREE.Mesh(mergeGeos(xParts), lam); xm.receiveShadow = true; stadium.add(xm); }
   glows.forEach(([x, y, z, sz, c, o]) => { const g = glowSprite(sz, lin(c), o); g.position.set(x, y, z); stadium.add(g); });
   // crop fields: planted rows in a few shades so farm country reads from the bleachers
-  const CROP = {corn: ["#1f3a1c", "#122612"], wheat: ["#6e5c2c", "#564722"], soy: ["#2c4626", "#1e3320"], dirt: ["#4a3828", "#38291e"]};
+  const CROP = {corn: ["#1f3a1c", "#122612"], wheat: ["#6e5c2c", "#564722"], soy: ["#2c4626", "#1e3320"], dirt: ["#4a3828", "#38291e"], golf: ["#3f6e34", "#386330"]};
   const cropTex = {};
   (data.crops || []).forEach(c => {
     const [x, z] = toG([c.x, c.y]); if (inSea(x, z)) return;
@@ -1592,11 +1599,12 @@ function buildStadium(home, away){
   const R = 1500, segs = 240, tam = data.tam ? toG(data.tam) : null;
   const tamAng = tam ? Math.atan2(tam[1], tam[0]-50) : 0, tamDistYd = tam ? Math.hypot(tam[0]-50, tam[1]) : 1;
   const tamH = tam ? R * Math.tan(Math.atan(784*YD / Math.max(tamDistYd, 800))) : 0;
-  const HC = {d: ["#170e10", "#3a2622"], m: ["#0d1422", "#1f2a40"], p: ["#0c1220", "#161f33"], b: ["#0b1418", "#14222a"], w: ["#0b141c", "#16233a"]}[E.b] || ["#0e1526", "#1b2540"];
+  const HC = {s: ["#14110c", "#33291b"], d: ["#170e10", "#3a2622"], m: ["#0d1422", "#1f2a40"], p: ["#0c1220", "#161f33"], b: ["#0b1418", "#14222a"], w: ["#0b141c", "#16233a"]}[E.b] || ["#0e1526", "#1b2540"];
   const hp = [], hc = [], low = lin(HC[0]), high = lin(HC[1]), snow = lin("#5d6882");
   const ph = (home.key || "").length*.37;                       // each town's ridgeline is its own
   const base = {
     x: a => 45 + 34*Math.sin(a*3.1+1.3+ph) + 22*Math.sin(a*7.7+.4) + 10*Math.sin(a*17.3) + 4*Math.sin(a*41),
+    s: a => 70 + 40*Math.sin(a*2.7+.9+ph) + 22*Math.abs(Math.sin(a*6.1+.3)) + 8*Math.sin(a*15.7),
     c: a => 30 + 22*Math.sin(a*3.1+1.3+ph) + 12*Math.sin(a*7.7+.4) + 5*Math.sin(a*17.3),
     p: a => 13 + 5*Math.sin(a*2.3+.7+ph) + 3*Math.sin(a*9.1) + 1.5*Math.sin(a*31),
     b: a => 11 + 4*Math.sin(a*5.1+ph) + 2*Math.sin(a*17),
@@ -1629,7 +1637,7 @@ function buildStadium(home, away){
     const rq = () => (q = (q*16807) % 2147483647) / 2147483647;
     for (let i = 0; i < (big ? 110 : 55); i++){
       const a = rq()*Math.PI*2; if (seaA !== null && Math.abs(Math.atan2(Math.sin(a - seaA), Math.cos(a - seaA))) < 1.3) continue;
-      const R2 = 620 + rq()*520, w = 22 + rq()*40, h = big ? 35 + Math.pow(rq(), 1.6)*240 : 14 + rq()*26, d = w*(.6 + rq()*.6);
+      const R2 = (big ? 950 : 700) + rq()*520, w = 22 + rq()*40, h = big ? 30 + Math.pow(rq(), 1.8)*160 : 14 + rq()*26, d = w*(.6 + rq()*.6);
       const g = new THREE.BoxGeometry(w, h, d), uv = g.attributes.uv, nrm = g.attributes.normal;
       for (let k = 0; k < uv.count; k++){ const side = Math.abs(nrm.getY(k)) < .5; uv.setXY(k, uv.getX(k)*(side ? (Math.abs(nrm.getX(k)) > .5 ? d : w)/7 : 0), uv.getY(k)*(side ? h/7 : 0)); }
       g.translate(50 + Math.cos(a)*R2, h/2 - 2, Math.sin(a)*R2); sk.push(paint(g, ["#121824", "#161d2b", "#1b2232"][i % 3]));
@@ -5916,7 +5924,7 @@ function hometown(key){
    density: B big city · C city · S suburb · T town · R rural (NCES locale) · size 0-3 from enrollment · v = mountains on the horizon */
 function envOf(sc){
   const raw = sc && (sc.raw || sc), code = (raw && raw.e) || (sc && sc.e) || "";
-  const m = /^([cdmbwpx])([BCSTR])([0-3])(v?)([a-h]?)$/.exec(code);
+  const m = /^([cdmbwpxs])([BCSETR])([0-3])(v?)([a-h]?)$/.exec(code);
   if (!m) return {b: "x", d: "S", size: 2, view: false, sea: -1, known: false, lat: raw && raw.lat};
   return {b: m[1], d: m[2], size: +m[3], view: !!m[4], sea: m[5] ? "abcdefgh".indexOf(m[5]) : -1, known: true, lat: raw && raw.lat};
 }
@@ -5927,7 +5935,9 @@ function townLabel(E){
     b: {B: "Bayou city", C: "Bayou city", S: "Bayou suburb", T: "Bayou town", R: "Bayou country"},
     w: {B: "City", C: "City", S: "Suburb", T: "North woods town", R: "North woods"},
     p: {B: "Big city", C: "City", S: "Suburb", T: "Small farm town", R: "Farm town"},
+    s: {B: "City in the hills", C: "City in the hills", S: "Canyon suburb", E: "Hillside estates", T: "Foothill town", R: "Ranch hills"},
     x: {B: "Big city", C: "City", S: "Suburb", T: "Small town", R: "Country town"}};
+  if (E.d === "E" && E.b !== "s") return E.b === "c" ? "Coastal hillside estates" : E.b === "d" ? "Desert estates" : E.b === "m" ? "Mountain estates" : "Hillside estates";
   return (L[E.b] || L.x)[E.d] + (E.view && E.b !== "m" ? " with a mountain view" : "");
 }
 // how each landscape looks: ground, trees, how wooded, backdrop
@@ -5941,6 +5951,7 @@ function biomeOf(E){
     w: {ground: "#152219", trees: ["pine_tallB","pine_default","tree_pineTall","pine_small","tree_detailed","tree_oakFall","pine_default"], n: 1.9},
     b: {ground: "#17241a", trees: ["tree_tallDark","tree_tallDark","tree_detailed","tree_oak","tree_tallDark"], n: 1.3},
     c: {ground: south ? "#4a4330" : "#22301f", trees: south ? ["palm_tall","palm_detailed","palm_bend","tree_detailed"] : ["tree_pineRound","tree_oak","pine_default","tree_detailed"], n: .8},
+    s: {ground: "#4a4128", trees: ["bush_desert","bush_large","tree_oak","rock_tallE","bush_desert","tree_detailed","bush_large"], urban: ["palm_tall","tree_oak","palm_detailed","bush_large"], n: .9},
   };
   const b = T[E.b] || T.x;
   return Object.assign({}, b, {trees: (E.d === "B" || E.d === "C" || E.d === "S") && b.urban ? b.urban : b.trees});
@@ -5948,6 +5959,26 @@ function biomeOf(E){
 // what gets built around the field, by town type (meters, field at the origin, +y north)
 function townFor(key, E){
   if (E.d === "S") return Object.assign({extras: [], crops: [], waters: []}, hometown(key));
+  if (E.d === "E"){
+    let q = 0; for (const ch of key) q = (q*31 + ch.charCodeAt(0)) >>> 0; q = q || 1;
+    const r = () => (q = (q*16807) % 2147483647) / 2147483647;
+    const B = [], roads = [], trees = [], crops = [];
+    const end = r() < .5 ? -1 : 1, sx = end*(120 + r()*20);
+    const sb = (cx, cy, w, d, h) => B.push({p: [[cx-w/2,cy-d/2],[cx+w/2,cy-d/2],[cx+w/2,cy+d/2],[cx-w/2,cy+d/2],[cx-w/2,cy-d/2]], h});
+    sb(sx, -10, 40, 50, 9); sb(sx + end*30, 40, 30, 26, 8);
+    // winding cul-de-sacs with big houses on large lots
+    for (let k = 0; k < 7; k++){
+      const a0 = r()*Math.PI*2, R0 = 200 + r()*120, pts = [];
+      for (let i = 0; i <= 8; i++){ const a = a0 + i*.16, rr = R0 + Math.sin(i*.9 + k)*30 + i*8; pts.push([Math.cos(a)*rr, Math.sin(a)*rr*.85]); }
+      for (let i = 1; i < pts.length; i++) roads.push([pts[i-1], pts[i]]);
+      pts.forEach(([x, y], i) => { if (i % 2) return; const o = (i % 4 ? 1 : -1)*24, l = Math.hypot(x, y) || 1, hx = x + x/l*o, hy = y + y/l*o;
+        if (Math.abs(hx) < 160 && Math.abs(hy) < 130) return;
+        B.push({p: [[hx-8,hy-8],[hx+8,hy-8],[hx+8,hy+8],[hx-8,hy+8],[hx-8,hy-8]], h: 7, house: true, c: [hx, hy], f: [-x/l*Math.sign(o), -y/l*Math.sign(o)]});
+        trees.push([hx + 12, hy + 6], [hx - 10, hy + 10]); });
+    }
+    if (r() < .7){ const a = r()*Math.PI*2; crops.push({x: Math.cos(a)*330, y: Math.sin(a)*280, w: 220, d: 90, ry: r()*3, k: "golf"}); }
+    return {buildings: B, roads, trees, extras: [], crops, waters: []};
+  }
   let seed = 0; for (const ch of key + E.d) seed = (seed*31 + ch.charCodeAt(0)) >>> 0; seed = seed || 1;
   const r = () => (seed = (seed*16807) % 2147483647) / 2147483647;
   const B = [], roads = [], trees = [], extras = [], crops = [], waters = [];
@@ -6030,8 +6061,9 @@ function townFor(key, E){
   if (E.b === "b") for (let i = 0; i < 9; i++){ const a = r()*Math.PI*2, d = 140 + r()*330; waters.push({x: Math.cos(a)*d, y: Math.sin(a)*d, rx: 25 + r()*55, ry: 18 + r()*40, a: r()*3}); }
   return {buildings: B, roads, trees, extras, crops, waters};
 }
-function stadiumFromRaw(raw){
+function stadiumFromRaw(raw, near){
   const f = raw && raw.f;
+  if (near && (near.b.length || near.r.length)) return stadiumFromNear(raw, near);
   const rect = ([cx, cy, w, d, a, h]) => { const c = Math.cos(a), s = Math.sin(a), pts = [[-w/2,-d/2],[w/2,-d/2],[w/2,d/2],[-w/2,d/2],[-w/2,-d/2]];
     return {p: pts.map(([x,y]) => [cx + x*c - y*s, cy + x*s + y*c]), h: h || 7.5}; };
   const env = envOf(raw), town = raw && raw.b && raw.b.length ? null : townFor((raw && (raw.k || raw.n)) || "school", env);
@@ -6040,8 +6072,33 @@ function stadiumFromRaw(raw){
 }
 async function loadStadium(sch){
   if (sch.stadium) return sch.stadium;
-  sch.stadium = stadiumFromRaw(sch.raw);
+  let near = null;   // the field's real surroundings (tools/near_us.py), when this school has them
+  if (sch.raw && sch.raw.k && sch.state && !(sch.raw.b && sch.raw.b.length))
+    try { const r = await fetch(`data/us/near/${sch.state}/${sch.raw.k}.json`); if (r.ok) near = await r.json(); } catch(e){}
+  sch.stadium = stadiumFromRaw(sch.raw, near);
   return sch.stadium;
+}
+// real OpenStreetMap surroundings within ~420 m (buildings, streets, trees, grandstands), town-type scenery beyond
+function stadiumFromNear(raw, near){
+  const f = raw.f, env = envOf(raw);
+  const rect = ([cx, cy, w, d, a, h]) => { const c = Math.cos(a), s = Math.sin(a), pts = [[-w/2,-d/2],[w/2,-d/2],[w/2,d/2],[-w/2,d/2],[-w/2,-d/2]];
+    return {p: pts.map(([x,y]) => [cx + x*c - y*s, cy + x*s + y*c]), h: h || 7.5}; };
+  const roads = near.r.map(r => { const out = []; for (let i = 0; i < r.length; i += 2) out.push([r[i], r[i+1]]); return out; });
+  // a house faces the nearest street
+  const face = (x, y) => { let best = 1e9, fx = -x, fy = -y;
+    roads.forEach(rd => rd.forEach(([rx, ry]) => { const d = (rx - x)**2 + (ry - y)**2; if (d < best){ best = d; fx = rx - x; fy = ry - y; } }));
+    const l = Math.hypot(fx, fy) || 1; return [fx/l, fy/l]; };
+  const buildings = near.b.map(b => b[6] === "h" && b[2]*b[3] < 400 ? {p: rect(b).p, h: b[5], house: true, c: [b[0], b[1]], f: face(b[0], b[1])} : rect(b));
+  const town = townFor(raw.k || raw.n || "school", env), far = (x, y) => Math.hypot(x, y) > 440;
+  const outer = {
+    buildings: town.buildings.filter(b => far(...(b.house ? b.c : b.p[0]))),
+    roads: town.roads.filter(rd => far(...rd[0]) && far(...rd[rd.length - 1])),
+    trees: town.trees.filter(t => far(...t)),
+    extras: town.extras.filter(e => far(e.x, e.y)), crops: town.crops.filter(c => far(c.x, c.y)), waters: town.waters.filter(w => far(w.x, w.y)),
+  };
+  return {natl: true, real: true, env, rot: near.rot || 0, flip: !!near.flip, surface: f ? (f.s || "grass") : "grass", track: f && f.trk ? [] : null,
+    buildings: buildings.concat(outer.buildings), roads: roads.concat(outer.roads), trees: near.t.concat(outer.trees),
+    extras: outer.extras, crops: outer.crops, waters: outer.waters, stands: [], field: [], realStands: {home: near.home, away: near.away}};
 }
 window.STADIUM_FOR = h => h.stadium || STADIUMS[h.key];
 
