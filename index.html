@@ -663,7 +663,10 @@ function track(name){ try { if (window.goatcounter && goatcounter.count) goatcou
 if (ANALYTICS.code && !window.HC_PORTAL){ const sc = document.createElement("script"); sc.async = true; sc.src = "https://gc.zgo.at/count.js";
   sc.dataset.goatcounter = `https://${ANALYTICS.code}.goatcounter.com/count`; document.head.appendChild(sc); }
 const DATA_BASE = window.HC_PORTAL ? "https://homecoming.football/" : "";
-const store = { get(k){try{return localStorage.getItem(k)}catch(e){return null}}, set(k,v){try{localStorage.setItem(k,v)}catch(e){}} };
+// saves: browser storage; on CrazyGames their SDK Data Module (synced to the player's CrazyGames account), once it's ready
+const cgData = () => { try { const d = window.HC_PORTAL === "crazygames" && window.CrazyGames && CrazyGames.SDK && CrazyGames.SDK.data; return d && d.getItem ? d : null; } catch(e){ return null; } };
+const store = { get(k){ const d = cgData(); if (d){ try { const v = d.getItem(k); if (v !== null && v !== undefined) return v; } catch(e){} } try { return localStorage.getItem(k); } catch(e){ return null; } },
+  set(k,v){ const d = cgData(); if (d){ try { d.setItem(k, v); } catch(e){} } try { localStorage.setItem(k, v); } catch(e){} } };
 /* ---------- ads: Google AdSense (H5 games ad breaks) ----------
    Rules so ads never get in the way: nothing during a game or the tutorial, no banners over the field, never after
    your first game, at most one full-screen break after a game ends and no more than once every 3 minutes.
