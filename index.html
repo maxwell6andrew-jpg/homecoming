@@ -492,7 +492,7 @@ button:focus-visible{outline:none}
   <div class="crumbs" id="setupCrumbs"></div>
   <h2 class="step">GAME DAY</h2>
   <div class="matchup" id="matchup"></div>
-  <p class="lede" id="setupRecord" style="margin:-10px 0 4px"></p><p class="sub" id="setupTown" style="text-align:center;margin:0 0 14px;color:var(--gold)"></p>
+  <p class="lede" id="setupRecord" style="margin:-10px 0 4px"></p><p class="sub" id="setupTown" style="text-align:center;margin:0 0 6px;color:var(--gold)"></p><p style="text-align:center;margin:0 0 14px"><button class="link" id="shareMatch">🔗 Send this matchup to a friend</button></p>
   <details class="colors"><summary id="colorNote">Team colors</summary><div id="colorEdit"></div></details>
   <div class="opts">
     <div class="opt"><h3>QUARTER LENGTH</h3><div class="seg" id="optLen">
@@ -657,6 +657,12 @@ const G = {
 };
 let teams = [[],[]]; // player objects, index 0 = user team
 let sound = true;
+// Privacy-friendly counts only (GoatCounter, cookieless). Empty code = analytics off. Portal builds never count.
+const ANALYTICS = {code: "", ready: false};
+function track(name){ try { if (window.goatcounter && goatcounter.count) goatcounter.count({path: "event/" + name, title: name, event: true}); } catch(e){} }
+if (ANALYTICS.code && !window.HC_PORTAL){ const sc = document.createElement("script"); sc.async = true; sc.src = "https://gc.zgo.at/count.js";
+  sc.dataset.goatcounter = `https://${ANALYTICS.code}.goatcounter.com/count`; document.head.appendChild(sc); }
+const DATA_BASE = window.HC_PORTAL ? "https://homecoming.football/" : "";
 const store = { get(k){try{return localStorage.getItem(k)}catch(e){return null}}, set(k,v){try{localStorage.setItem(k,v)}catch(e){}} };
 /* ---------- ads: Google AdSense (H5 games ad breaks) ----------
    Rules so ads never get in the way: nothing during a game or the tutorial, no banners over the field, never after
@@ -677,7 +683,8 @@ const PRO = {checkout: "https://homecomingfootball.lemonsqueezy.com/checkout/buy
   allowTest: () => /^(localhost|127\.0\.0\.1)$/.test(location.hostname) || store.get("hc_protest") === "1", page: "https://homecoming.football/pro.html"};
 const esc = t => String(t).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"})[c]);
 function proData(){ try { const d = JSON.parse(store.get("hc_pro") || "null"); return d && d.key ? d : null; } catch(e){ return null; } }
-const isPro = () => !!proData();
+// portal builds (CrazyGames): no outside purchases allowed there, so the Pro extras are simply on; ads are the portal's own
+const isPro = () => !!window.HC_PORTAL || !!proData();
 async function proCall(action, body){
   const r = await fetch(PRO.api + action, {method: "POST", headers: {Accept: "application/json"}, body: new URLSearchParams(body)});
   let j = {}; try { j = await r.json(); } catch(e){}
@@ -744,6 +751,12 @@ function updateProBtn(){ const b = $("proBtn"); if (b) b.textContent = isPro() ?
 // Pro-only feature gate: runs fn when Pro, otherwise shows the upgrade card
 function proGate(feature, fn){ if (isPro()) return fn(); openPro(feature); }
 function adAfterGame(done){
+  if (window.HC_PORTAL === "crazygames"){   // the portal's own ad break; never during play
+    const SDK = window.CrazyGames && CrazyGames.SDK, go = () => { if (MUS.master && AC) MUS.master.gain.setTargetAtTime(sound ? 1 : 0, AC.currentTime, .1); done && done(); };
+    if (!SDK || G.tutorialGame) return go();
+    try { SDK.game.gameplayStop(); SDK.ad.requestAd("midgame", {adStarted: () => { if (MUS.master && AC) MUS.master.gain.setTargetAtTime(0, AC.currentTime, .05); }, adFinished: go, adError: go}); } catch(e){ go(); }
+    return;
+  }
   const games = +(store.get("hc_games") || 0) + 1; store.set("hc_games", String(games));
   let finished = false, started = false;
   const go = () => { if (finished) return; finished = true; if (MUS.master && AC) MUS.master.gain.setTargetAtTime(sound ? 1 : 0, AC.currentTime, .1); done && done(); };
@@ -948,7 +961,9 @@ function crowdTo(level){ G.crowd = Math.max(G.crowd, level); }
 const renderer = new THREE.WebGLRenderer({antialias:true, powerPreference:"high-performance"});
 // phones and tablets get a lighter pipeline: no shadow pass (blob shadows stay), no bloom, post-pass ink only,
 // fewer sideline extras, and a resolution scaler that trades sharpness for a steady frame rate
-const LITE = matchMedia("(pointer: coarse)").matches || /iPhone|iPad|Android/i.test(navigator.userAgent) || /[?&]lite\b/.test(location.search);
+// school Chromebooks and low-end laptops count as LITE too (no shadow pass, no bloom, fewer extras)
+const LITE = matchMedia("(pointer: coarse)").matches || /iPhone|iPad|Android|CrOS/i.test(navigator.userAgent) || (navigator.deviceMemory && navigator.deviceMemory <= 4) ||
+  (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 2) || /[?&]lite\b/.test(location.search);
 const PR_MAX = Math.min(window.devicePixelRatio || 1, LITE ? 1.6 : 2);
 let prNow = PR_MAX;
 // RETRO (default): the 3D renders at about 320 lines and is blown up with hard pixels and a 15-bit dithered
@@ -2537,6 +2552,8 @@ function weatherTick(dt){
 }
 
 function startGame(){
+  track(G.career ? "game-start-career" : "game-start");
+  try { if (window.HC_PORTAL === "crazygames" && window.CrazyGames) CrazyGames.SDK.game.gameplayStart(); } catch(e){}
   audioInit();
   if (G.userIsHome === undefined) G.userIsHome = true;
   buildStadium(venue(), visitor());
@@ -3683,8 +3700,11 @@ function finish(){
     row("FIRST DOWNS", t => t.fd) + row("SACKS", t => t.sacks) + row("TURNOVERS", t => t.to);
   const rec = getRecord(); rec[won ? 0 : tie ? 2 : 1]++; store.set(recordKey(), JSON.stringify(rec));
   $("recordLine").textContent = `Your record at ${G.home.name} vs ${G.away.name}: ${rec[0]}-${rec[1]}${rec[2] ? "-" + rec[2] : ""}`;
-  G.shareText = `${G.home.name} ${G.score[0]}, ${G.away.name} ${G.score[1]}${G.ot ? " (OT)" : ""}. Homecoming night under the lights. 🏈`;
-  $("copyBtn").textContent = "COPY RESULT";
+  const won0 = G.score[0] > G.score[1], link = matchLink(G.home, G.away, won0 ? `${G.score[0]}-${G.score[1]}` : "");
+  G.shareText = won0 ? `I beat ${G.away.name} ${G.score[0]}-${G.score[1]} on ${G.home.name}'s real field in Homecoming. Think you can do better? 🏈 ${link}`
+    : `${G.home.name} ${G.score[0]}, ${G.away.name} ${G.score[1]}${G.ot ? " (OT)" : ""} on our real field in Homecoming. Your turn 🏈 ${link}`;
+  G.shareLink = link; $("copyBtn").textContent = navigator.share ? "SHARE CHALLENGE" : "COPY CHALLENGE LINK";
+  track(won0 ? "game-win" : "game-loss");
   showScreen("final"); setTimeout(() => jingle(won ? "victory" : tie ? "chapter" : "loss"), 250);
 }
 
@@ -5904,14 +5924,14 @@ function marinBuiltIn(){
 }
 async function loadIndex(){
   if (DATA.index) return DATA.index;
-  try { const r = await fetch("data/us/index.json"); if (!r.ok) throw new Error(r.status); DATA.index = await r.json(); }
+  try { const r = await fetch(DATA_BASE + "data/us/index.json"); if (!r.ok) throw new Error(r.status); DATA.index = await r.json(); }
   catch(e){ DATA.index = {states:[{code:"CA", name:"California", count:SCHOOLS.length, offline:true}]}; }
   return DATA.index;
 }
 async function loadState(code){
   if (DATA.states[code]) return DATA.states[code];
   let j;
-  try { const r = await fetch(`data/us/${code}.json`); if (!r.ok) throw new Error(r.status); j = await r.json(); }
+  try { const r = await fetch(`${DATA_BASE}data/us/${code}.json`); if (!r.ok) throw new Error(r.status); j = await r.json(); }
   catch(e){ j = {code:"CA", state:"California", counties:[{name:"Marin County", schools:[]}], offline:true}; }
   const marin = code === "CA" ? marinBuiltIn() : [];
   j.regions = j.counties.map(cn => ({key: cn.name, name: cn.name, schools: cn.schools.map(raw => {
@@ -6114,7 +6134,7 @@ async function loadStadium(sch){
   if (sch.stadium) return sch.stadium;
   let near = null;   // the field's real surroundings (tools/near_us.py), when this school has them
   if (sch.raw && sch.raw.k && sch.state && !(sch.raw.b && sch.raw.b.length))
-    try { const r = await fetch(`data/us/near/${sch.state}/${sch.raw.k}.json`); if (r.ok) near = await r.json(); } catch(e){}
+    try { const r = await fetch(`${DATA_BASE}data/us/near/${sch.state}/${sch.raw.k}.json`); if (r.ok) near = await r.json(); } catch(e){}
   sch.stadium = stadiumFromRaw(sch.raw, near);
   return sch.stadium;
 }
@@ -6223,6 +6243,33 @@ function renderColorEditor(){
     box.appendChild(row);
   });
 }
+// a link that opens this exact matchup (state/key of both schools); "beat" is the score to top
+const schoolRef = sc => sc && sc.state && (sc.raw && sc.raw.k || sc.key) ? `${sc.state}/${(sc.raw && sc.raw.k) || sc.key}` : "";
+function matchLink(home, away, beat){
+  const h = schoolRef(home), a = schoolRef(away); if (!h) return "https://homecoming.football/";
+  return `https://homecoming.football/?s=${h}${a ? "&vs=" + a : ""}${beat ? "&beat=" + beat : ""}`;
+}
+async function findSchool(ref){
+  const m = /^([A-Z]{2})\/([a-z0-9-]+)$/.exec(ref || ""); if (!m) return null;
+  const st = await loadState(m[1]); return st.all.find(x => (x.raw && x.raw.k) === m[2] || x.key === m[2]) || null;
+}
+// the visitors when a link only names the home school: a crosstown school, else the nearest one
+function rivalFor(home, st){
+  const others = st.all.filter(x => x !== home); if (!others.length) return null;
+  const same = others.find(x => x.city && x.city === home.city); if (same) return same;
+  const hl = home.raw || home, d = x => { const r = x.raw || x; return (r.lat - hl.lat)**2 + ((r.lon - hl.lon)*.8)**2; };
+  return hl.lat ? others.filter(x => (x.raw || x).lat).sort((a, b) => d(a) - d(b))[0] : others[0];
+}
+async function openFromLink(){
+  const q = new URLSearchParams(location.search), s = q.get("s"); if (!s) return;
+  try {
+    const home = await findSchool(s); if (!home) return;
+    const st = await loadState(home.state), away = (await findSchool(q.get("vs"))) || rivalFor(home, st); if (!away) return;
+    G.pickingFor = "quick"; pickState.state = st; pickState.region = st.regions.find(r => r.name === home.regionName) || null; pickState.step = 3;
+    G.home = home; G.away = away; G.challenge = /^\d{1,3}-\d{1,3}$/.test(q.get("beat") || "") ? q.get("beat") : null;
+    track(G.challenge ? "open-challenge" : "open-link"); openSetup();
+  } catch(e){}
+}
 function openSetup(){
   showScreen("setup");
   $("setupCrumbs").innerHTML = `${pickState.state ? pickState.state.state.toUpperCase() : "CALIFORNIA"} › ${(G.home.regionName || "").toUpperCase()} › <b>${G.home.name.toUpperCase()}</b>`;
@@ -6231,7 +6278,7 @@ function openSetup(){
     s.style.background = home ? sc.c1 : "#f2f2f2"; s.style.color = home ? (luminance(sc.c1)>.6?"#111":"#fff") : "#111"; s.style.borderLeft = `8px solid ${home ? sc.c2 : sc.c1}`; return s; };
   const vs = document.createElement("span"); vs.className = "vs"; vs.textContent = "AT";
   m.append(tm(G.away,false), vs, tm(G.home,true));
-  const rec = getRecord(); $("setupRecord").textContent = rec[0] + rec[1] + rec[2] ? `Your record in this matchup: ${rec[0]}-${rec[1]}${rec[2] ? "-" + rec[2] : ""}` : "First meeting. Make it count.";
+  const rec = getRecord(); $("setupRecord").textContent = G.challenge ? `🏆 CHALLENGE: your friend won ${G.challenge}. Beat it.` : rec[0] + rec[1] + rec[2] ? `Your record in this matchup: ${rec[0]}-${rec[1]}${rec[2] ? "-" + rec[2] : ""}` : "First meeting. Make it count.";
   $("colorNote").textContent = G.home.cs === "generated" ? `We don't know ${G.home.name}'s colors yet. Set them below and the game will remember.` : `${G.home.name} colors. Wrong? Fix them below.`;
   const TE = envOf(G.home); $("setupTown").textContent = TE.known ? `🏟 ${townLabel(TE).toUpperCase()} · ${["SMALL","MID-SIZE","BIG","HUGE"][TE.size]} STANDS` : "";
   renderColorEditor();
@@ -6242,17 +6289,28 @@ function openSetup(){
 }
 function segBind(id, cb){ $(id).addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return;
   $(id).querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x === b)); cb(b.dataset.v); SFX.tick(); }); }
+$("shareMatch").addEventListener("click", () => {
+  const link = matchLink(G.home, G.away, ""), text = `Play ${G.away.name} at ${G.home.name}'s real field in Homecoming 🏈 ${link}`; track("share-matchup");
+  if (navigator.share) return navigator.share({title: "Homecoming", text}).catch(() => {});
+  try { navigator.clipboard.writeText(link).then(() => { $("shareMatch").textContent = "✔ Link copied"; }); } catch(e){}
+});
 segBind("optLen", v => G.qLen = +v);
 segBind("optDiff", v => G.diff = DIFF[v]);
 G.quickMode = "offense";                     // quick games start offense-only (defense simulated), like the career default
 segBind("optMode", v => G.quickMode = v);
 G.wxPick = "random"; segBind("optWx", v => G.wxPick = v);
 
-$("playBtn").addEventListener("click", () => { audioInit(); SFX.tick(); G.pickingFor = "quick"; pickState.step = 0; renderPick(); showScreen("pick"); });
+$("playBtn").addEventListener("click", () => { audioInit(); SFX.tick(); G.challenge = null; G.pickingFor = "quick"; pickState.step = 0; renderPick(); showScreen("pick"); });
 $("careerBtn").addEventListener("click", () => { audioInit(); SFX.tick(); openCareerMenu(); });
 $("proBtn").addEventListener("click", () => { audioInit(); SFX.tick(); openPro(); });
+if (window.HC_PORTAL){   // portal: no store, and links stay inside the game (attribution kept as plain text)
+  $("proBtn").hidden = true;
+  document.querySelectorAll(".credit a").forEach(a => { const t = document.createElement("span"); t.textContent = a.textContent; a.replaceWith(t); });
+  try { if (window.CrazyGames) CrazyGames.SDK.init().catch(() => {}); } catch(e){}
+}
 updateProBtn(); setTimeout(proRecheck, 4000);
 // back from checkout (Lemon Squeezy's "Back to Homecoming" button lands on ?pro=1): open the key box
+setTimeout(openFromLink, 50);   // ?s=ST/key links open straight to that matchup
 try { const q = new URLSearchParams(location.search); if (q.has("protest")) store.set("hc_protest", "1"); if (q.has("pro")){ history.replaceState(null, "", location.pathname); if (!isPro()) setTimeout(() => openPro("key"), 300); } } catch(e){}
 $("backBtn").addEventListener("click", () => { if (pickState.step === 0) return showScreen("title"); pickState.step--; pickState.q = ""; $("pickSearch").value = ""; renderPick(); });
 $("flipBtn").addEventListener("click", () => { G.flip = !G.flip; $("flipBtn").setAttribute("aria-pressed", G.flip ? "true" : "false"); SFX.tick();
@@ -6277,10 +6335,13 @@ $("quitBtn").addEventListener("click", () => quitToMenu());
 $("againBtn").addEventListener("click", () => adAfterGame(() => { $("menuBtn").hidden = false; startGame(); }));
 $("newBtn").addEventListener("click", () => adAfterGame(() => quitToMenu(true)));
 $("copyBtn").addEventListener("click", () => {
+  track("share");
+  if (navigator.share){ navigator.share({title: "Homecoming", text: G.shareText}).catch(() => {}); return; }
   const done = () => { $("copyBtn").textContent = "COPIED"; };
   try { navigator.clipboard.writeText(G.shareText).then(done, () => { $("copyBtn").textContent = G.shareText; }); } catch(e){ $("copyBtn").textContent = G.shareText; }
 });
 function quitToMenu(toPick){
+  try { if (window.HC_PORTAL === "crazygames" && window.CrazyGames) CrazyGames.SDK.game.gameplayStop(); } catch(e){}
   if (G.career){ G.career = null; G.tutorialGame = false; G.userIsHome = true; if (CAR){ G.paused = false; G.phase = "menu"; $("tossPanel").hidden = true; $("hud").hidden = true; $("menuBtn").hidden = true; $("fsBtn").hidden = true; $("ctrl").hidden = true; $("playcall").hidden = true; return openOffice(); } }
   G.paused = false; G.phase = "menu"; $("tossPanel").hidden = true; G.cut = null; $("hud").hidden = true; $("menuBtn").hidden = true; $("fsBtn").hidden = true; $("padHint").hidden = true; $("ctrl").hidden = true; $("playcall").hidden = true;
   if (toPick && pickState.state){ pickState.step = pickState.region ? 2 : 1; renderPick(); showScreen("pick"); } else showScreen("title");
@@ -6381,7 +6442,7 @@ $("fsBtn").addEventListener("click", toggleFS);
 const ssGet = k => { try { return sessionStorage.getItem(k); } catch(e){ return null; } };
 const IS_IOS = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
 const STANDALONE = matchMedia("(display-mode: standalone)").matches || matchMedia("(display-mode: fullscreen)").matches || navigator.standalone === true;
-if (matchMedia("(pointer: coarse)").matches && !STANDALONE){
+if (matchMedia("(pointer: coarse)").matches && !STANDALONE && !window.HC_PORTAL){
   // the first touch on a phone takes the game full screen and holds it sideways (Android/Chrome; iOS can't)
   addEventListener("pointerup", function goFS(){ removeEventListener("pointerup", goFS, true);
     if (fsOK() && !(document.fullscreenElement || document.webkitFullscreenElement)) toggleFS(); }, true);
@@ -6393,7 +6454,7 @@ if (matchMedia("(pointer: coarse)").matches && !STANDALONE){
 }
 let installEvt = null;
 addEventListener("beforeinstallprompt", e => { e.preventDefault(); installEvt = e;
-  if (STANDALONE || ssGet("hc_a2hs") || !matchMedia("(pointer: coarse)").matches) return;
+  if (window.HC_PORTAL || STANDALONE || ssGet("hc_a2hs") || !matchMedia("(pointer: coarse)").matches) return;
   $("a2hsSteps").innerHTML = "Install it and it opens full screen, sideways, with its own icon. Free, no download store."; $("a2hsGo").hidden = false; $("a2hs").hidden = false; });
 $("a2hsGo").onclick = async e => { e.stopPropagation(); $("a2hs").hidden = true; if (installEvt){ installEvt.prompt(); installEvt = null; } };
 $("a2hsX").onclick = e => { e.stopPropagation(); $("a2hs").hidden = true; try { sessionStorage.setItem("hc_a2hs", "1"); } catch(err){} };
@@ -6567,10 +6628,14 @@ if (/[?&]debug\b/.test(location.search)) debugPanel();
 
 const DYN = {acc: 0, n: 0, t: 0};
 function dynResolution(rawDt){
-  if (G.phase === "menu" || document.hidden || RETRO) return;
+  if (G.phase === "menu" || document.hidden) return;
   DYN.acc += rawDt; DYN.n++; DYN.t += rawDt;
   if (DYN.t < 1.5) return;
   const avg = DYN.acc/DYN.n; DYN.acc = 0; DYN.n = 0; DYN.t = 0;
+  // still choppy during play: shed the expensive passes once (shadow maps stop re-rendering, bloom off)
+  if (avg > 1/38 && G.phase === "live"){ DYN.slow = (DYN.slow || 0) + 1;
+    if (DYN.slow >= 2 && !DYN.shed){ DYN.shed = true; renderer.shadowMap.autoUpdate = false; if (typeof bloomPass !== "undefined" && bloomPass) bloomPass.enabled = false; track("perf-shed"); } }
+  if (RETRO) return;
   let pr = prNow;
   if (avg > 1/48) pr = Math.max(.75, prNow - .15); else if (avg < 1/57) pr = Math.min(PR_MAX, prNow + .1);
   if (Math.abs(pr - prNow) < .01) return;
