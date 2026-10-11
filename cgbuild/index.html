@@ -1,6 +1,7 @@
 <!doctype html><html lang="en">
 <meta charset="utf-8">
 <script>window.HC_PORTAL = "crazygames"; window.HC_PORTAL_ADS = false; /* basic launch: no ads. Set true after full launch. */</script>
+<script>window.__hcErr = []; addEventListener("error", e => { const t = e.target; __hcErr.push(t && t !== window && (t.src || t.href) ? "failed to load " + (t.src || t.href) : (e.message || "error") + " @" + String(e.filename || "").split("/").pop() + ":" + e.lineno + ":" + e.colno); }, true); addEventListener("unhandledrejection", e => __hcErr.push("promise: " + (e.reason && (e.reason.stack || e.reason.message) || e.reason))); setTimeout(() => { if (window.__hcBooted) return; const d = document.createElement("div"); d.style.cssText = "position:fixed;left:8px;right:8px;bottom:8px;z-index:99999;font:12px/1.4 monospace;color:#fff;background:rgba(140,0,0,.9);padding:8px;white-space:pre-wrap;pointer-events:none"; d.textContent = "Homecoming did not finish starting. Try reloading. [" + (window.__hcStage || "start") + "]\n" + __hcErr.slice(0, 5).join("\n").slice(0, 900); document.body.appendChild(d); }, 9000);</script>
 <script src="https://sdk.crazygames.com/crazygames-sdk-v3.js"></script>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
 <meta name="theme-color" content="#06080f">
@@ -1269,7 +1270,7 @@ addEventListener("keydown", e => { if (e.code === "KeyM" && !e.repeat && !/INPUT
    ================================================================ */
 // the scene is drawn into the post chain's own (non-MSAA) target, so an MSAA canvas would only ever receive the final
 // full-screen quad: skip it when the composer scripts loaded (HD keeps FXAA)
-const renderer = new THREE.WebGLRenderer({antialias: !THREE.EffectComposer, powerPreference:"high-performance"});
+window.__hcStage = "renderer"; const renderer = new THREE.WebGLRenderer({antialias: !THREE.EffectComposer, powerPreference:"high-performance"}); window.__hcStage = "scene";
 // phones and tablets get a lighter pipeline: no shadow pass (blob shadows stay), no bloom, lower-poly bodies,
 // fewer sideline extras, and a resolution scaler that trades sharpness for a steady frame rate
 // school Chromebooks and low-end laptops count as LITE too (no shadow pass, no bloom, fewer extras)
@@ -8820,7 +8821,7 @@ const fontsReady = Promise.race([Promise.all(["400 40px Graduate","700 40px Teko
 Promise.all([fontsReady, Promise.race([RIG.loading, new Promise(r => setTimeout(r, 4000))])]).then(backdrop)
   .catch(e => console.warn("title backdrop failed", e)).then(cgLoaded);
 // the portal's loader must come down even if fonts, models or a busy GPU stall the title backdrop
-function cgLoaded(){ if (CG.loaded) return; CG.loaded = true; cgSDK(sdk => sdk.game.loadingStop()); }
+function cgLoaded(){ if (CG.loaded) return; CG.loaded = window.__hcBooted = true; cgSDK(sdk => sdk.game.loadingStop()); }
 setTimeout(cgLoaded, 7000);
-requestAnimationFrame(frame);
+requestAnimationFrame(frame); window.__hcStage = "booted";
 </script>
