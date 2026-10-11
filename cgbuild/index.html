@@ -8817,6 +8817,7 @@ loadRig();
 function backdrop(){ if (G.phase !== "menu") return;   // a game that started first keeps its own stadium
   const h = G.home, a = G.away, w = G.weather; G.home = SCHOOLS[3]; G.away = SCHOOLS[6]; buildStadium(G.home, G.away); G.weather = "clear"; applyWeather(); G.weather = h ? w : null; G.home = h || null; G.away = h ? a : null; }
 const fontsReady = Promise.race([Promise.all(["400 40px Graduate","700 40px Teko","600 20px 'Barlow Semi Condensed'","400 16px DotGothic16","700 24px 'Pixelify Sans'"].map(f => document.fonts.load(f))), new Promise(r => setTimeout(r, 2500))]).catch(()=>{});
-Promise.all([fontsReady, Promise.race([RIG.loading, new Promise(r => setTimeout(r, 4000))])]).then(backdrop).then(() => cgSDK(sdk => sdk.game.loadingStop()));
+Promise.all([fontsReady, Promise.race([RIG.loading, new Promise(r => setTimeout(r, 4000))])]).then(backdrop)
+  .catch(e => console.warn("title backdrop failed", e)).then(() => cgSDK(sdk => sdk.game.loadingStop()));   // a busy GPU must not leave the portal's loader up
 requestAnimationFrame(frame);
 </script>
