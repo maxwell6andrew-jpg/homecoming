@@ -220,7 +220,7 @@ b.star{color:#ffd23a;text-shadow:0 0 6px rgba(255,210,58,.6)}
 #stick{position:fixed;width:120px;height:120px;margin:-60px 0 0 -60px;border-radius:50%;border:2px solid rgba(255,255,255,.25);background:rgba(255,255,255,.05);display:none}
 #knob{position:absolute;left:50%;top:50%;width:54px;height:54px;margin:-27px 0 0 -27px;border-radius:50%;background:rgba(255,255,255,.35);box-shadow:0 0 0 2px rgba(255,255,255,.4)}
 #pad{position:fixed;right:calc(env(safe-area-inset-right,0px) + 14px);bottom:calc(env(safe-area-inset-bottom,0px) + 18px);display:grid;
-  grid-template-columns:auto auto;grid-template-areas:"r r" "t a";gap:12px;align-items:end;pointer-events:auto}
+  grid-template-columns:auto auto;grid-template-areas:"r r" "h a";gap:12px;align-items:end;pointer-events:auto}
 #recv{grid-area:r;display:flex;gap:10px;justify-content:flex-end}
 .rb{width:58px;height:58px;border-radius:50%;font-size:32px;font-weight:700;color:#000;border:3px solid rgba(0,0,0,.5);box-shadow:0 4px 0 rgba(0,0,0,.5);padding-top:6px}
 .rb:active,.pb.on{transform:translateY(3px);box-shadow:0 1px 0 rgba(0,0,0,.5)}
@@ -228,9 +228,13 @@ b.star{color:#ffd23a;text-shadow:0 0 6px rgba(255,210,58,.6)}
 #recv{gap:7px}.rb{width:52px;height:52px;font-size:28px}
 .pb{width:84px;height:84px;border-radius:50%;font-size:24px;font-weight:700;letter-spacing:.05em;border:3px solid rgba(0,0,0,.45);box-shadow:0 5px 0 rgba(0,0,0,.55);padding-top:5px;line-height:.9}
 #act{grid-area:a;background:radial-gradient(circle at 35% 30%,#7dffb0,#1fb45c);color:#032611;width:96px;height:96px;font-size:28px}
-#turbo{grid-area:t;background:radial-gradient(circle at 35% 30%,#ffb38a,#ff4d2e);color:#2a0700;position:relative;overflow:hidden}
-#turbo i{position:absolute;left:0;right:0;bottom:0;background:rgba(255,255,255,.35);height:100%;transform-origin:bottom}
-#turbo span{position:relative}
+/* context button: HIT on defense (goes green in the sweet spot; the fill is the cooldown), PROTECT while you carry, else hidden */
+#hit{grid-area:h;background:radial-gradient(circle at 35% 30%,#ffb38a,#ff4d2e);color:#2a0700;position:relative;overflow:hidden;font-size:21px}
+#hit.off{visibility:hidden}
+#hit.go{background:radial-gradient(circle at 35% 30%,#b8ffcf,#22c55e);color:#032611}
+#hit[data-k="protect"]{background:radial-gradient(circle at 35% 30%,#ffe9a3,#e0a21a);color:#2a1a00;font-size:16px}
+#hit i{position:absolute;left:0;right:0;bottom:0;background:rgba(0,0,0,.35);height:100%;transform-origin:bottom;transform:scaleY(0)}
+#hit span{position:relative}
 #switch{position:fixed;right:calc(env(safe-area-inset-right,0px) + 120px);bottom:calc(env(safe-area-inset-bottom,0px) + 124px);width:64px;height:64px;font-size:20px;
   background:radial-gradient(circle at 35% 30%,#a9c6ff,#3d6fd8);color:#061433;pointer-events:auto}
 .hint{position:fixed;left:calc(env(safe-area-inset-left,0px) + 18px);bottom:calc(env(safe-area-inset-bottom,0px) + 22px);font-family:var(--display);font-size:18px;letter-spacing:.1em;color:rgba(255,255,255,.4);pointer-events:none}
@@ -359,6 +363,7 @@ body:has(#playcall:not([hidden])) #padHint{visibility:hidden}   /* the play card
   .bug{transform:skewX(-10deg) scale(.82);transform-origin:top center}
   #pad{gap:8px;right:calc(env(safe-area-inset-right,0px) + 10px);bottom:calc(env(safe-area-inset-bottom,0px) + 10px)}
   #act{width:74px;height:74px;font-size:22px}.pb{width:62px;height:62px;font-size:19px}
+  #hit{font-size:18px}#hit[data-k="protect"]{font-size:12px;letter-spacing:0}   /* PROTECT has to fit the small button */
   .rb{width:46px;height:46px;font-size:26px}
   #switch{right:calc(env(safe-area-inset-right,0px) + 92px);bottom:calc(env(safe-area-inset-bottom,0px) + 96px);width:54px;height:54px;font-size:16px}
   #playcall{padding-top:4px}#playcall h3{margin:2px 4px 4px;font-size:22px}#playcall h3 span{font-size:15px;letter-spacing:.04em}
@@ -531,7 +536,7 @@ body:has(#howto:not([hidden])) #sndBtn,body:has(#coach:not([hidden])) #sndBtn{vi
     <div id="recv" hidden>
       <button class="rb" data-i="0">1</button><button class="rb" data-i="1">2</button><button class="rb" data-i="2">3</button><button class="rb" data-i="3">4</button><button class="rb" data-i="4">5</button>
     </div>
-    <button class="pb" id="turbo"><i id="turboFill"></i><span>TURBO</span></button>
+    <button class="pb off" id="hit" data-k=""><i id="hitFill"></i><span>HIT</span></button>
     <button class="pb" id="act">SNAP</button>
   </div>
 </div>
@@ -739,7 +744,7 @@ const G = {
   home:null, away:null, diff:DIFF.varsity, qLen:120,
   score:[0,0], quarter:1, clock:120, poss:0, firstPoss:0, los:25, ballZ:0, down:1, toGo:10,
   phase:"menu", playT:0, offPlay:null, defCall:null, carrier:null, ball:null, user:null,
-  startPoss:0, msgT:0, ot:false, tipsSeen:{}, lastResult:"", turbo:1, crowd:.2, gen:0,
+  startPoss:0, msgT:0, ot:false, tipsSeen:{}, lastResult:"", crowd:.2, gen:0,
 };
 // game-flow timers belong to one game: startGame() and quitToMenu() bump G.gen, so a timer left over from a game
 // you quit (or just finished) can never fire into the menu or the next game. Use later() for every game-flow delay.
@@ -1268,7 +1273,7 @@ addEventListener("keydown", e => { if (e.code === "KeyM" && !e.repeat && !/INPUT
    ================================================================ */
 // the scene is drawn into the post chain's own (non-MSAA) target, so an MSAA canvas would only ever receive the final
 // full-screen quad: skip it when the composer scripts loaded (HD keeps FXAA)
-const renderer = new THREE.WebGLRenderer({antialias: !THREE.EffectComposer, powerPreference:"high-performance"});
+window.__hcStage = "renderer"; const renderer = new THREE.WebGLRenderer({antialias: !THREE.EffectComposer, powerPreference:"high-performance"}); window.__hcStage = "scene";
 // phones and tablets get a lighter pipeline: no shadow pass (blob shadows stay), no bloom, lower-poly bodies,
 // fewer sideline extras, and a resolution scaler that trades sharpness for a steady frame rate
 // school Chromebooks and low-end laptops count as LITE too (no shadow pass, no bloom, fewer extras)
@@ -1424,7 +1429,7 @@ function keepShared(){
   Object.values(PROPS.items).forEach(P => P.parts.forEach(({geo, mat}) => { add(geo); add(mat); add(mat.map); }));
   if (PG) Object.values(PG).forEach(add);
   // per-session singletons re-attached to `dynamic` each game (and the chevron texture every beat sprite maps)
-  try { add(BEAT_TEX); if (AIM_SPR){ add(AIM_SPR.material); add(AIM_SPR.material.map); } if (G.coin){ add(G.coin.geometry); add(G.coin.material); } } catch(e){}
+  try { add(BEAT_TEX); add(HITX.warn); add(HITX.prot); if (AIM_SPR){ add(AIM_SPR.material); add(AIM_SPR.material.map); } if (G.coin){ add(G.coin.geometry); add(G.coin.material); } } catch(e){}
 }
 const TEX_SLOTS = ["map", "emissiveMap", "alphaMap", "gradientMap", "envMap", "lightMap", "bumpMap", "normalMap", "specularMap"];
 function disposeMat(m){
@@ -2227,6 +2232,10 @@ function buildStadium(home, away){
   [G.losLine, G.fdLine].forEach(m => { m.rotation.x = -Math.PI/2; m.position.y = .03; m.renderOrder = 1; dynamic.add(m); });
   G.ring = new THREE.Mesh(new THREE.RingGeometry(.6,.78,32), new THREE.MeshBasicMaterial({color:0xffd23a, transparent:true, opacity:.9, side:THREE.DoubleSide, depthWrite:false, toneMapped:false}));
   G.ring.rotation.x = -Math.PI/2; G.ring.position.y = .05; dynamic.add(G.ring);
+  // hit stick: a ring on the ball carrier that closes onto a white target circle as you close (green = hit now)
+  G.hitRing = new THREE.Mesh(new THREE.RingGeometry(.8, 1, 40), new THREE.MeshBasicMaterial({color:0xffd23a, transparent:true, opacity:.95, side:THREE.DoubleSide, depthWrite:false, toneMapped:false}));
+  G.hitTgt = new THREE.Mesh(new THREE.RingGeometry(1.1, 1.2, 40), new THREE.MeshBasicMaterial({color:0xffffff, transparent:true, opacity:.7, side:THREE.DoubleSide, depthWrite:false, toneMapped:false}));
+  [G.hitRing, G.hitTgt].forEach(m => { m.rotation.x = -Math.PI/2; m.renderOrder = 8; m.visible = false; dynamic.add(m); });
   G.target = new THREE.Mesh(new THREE.RingGeometry(.35,.55,24), new THREE.MeshBasicMaterial({color:0xffffff, transparent:true, opacity:.75, side:THREE.DoubleSide, depthWrite:false, toneMapped:false}));
   G.target.rotation.x = -Math.PI/2; G.target.position.y = .05; G.target.visible = false; dynamic.add(G.target);
   G.ballMesh = new THREE.Mesh(footballGeo(), new THREE.MeshPhongMaterial({vertexColors: true, shininess: 30})); G.ballMesh.castShadow = true; dynamic.add(G.ballMesh);
@@ -3153,9 +3162,11 @@ function driveRig(p, sp, dt, pre){
   const armF = (side, up, elbow) => { bend(b[BONE(side + "_UpperArm")], right, -up); bend(b[BONE(side + "_Forearm")], right, -elbow); };
   const held = G.ball && G.ball.held === p;
   if (p.dive > 0){ armF("L", 2.4, 0); armF("R", 2.4, 0); }
+  else if (p.lunge > 0){ armF("L", 1.5, .35); armF("R", 1.5, .35); }
   else if (p.throwT > 0){ const u = 1 - p.throwT/.35; armF("R", 2.6 - u*1.6, 1.2 - u*1.0); armF("L", .9, .8); }
   else if (G.ball && G.ball.air && G.ball.air.target === p && G.ball.air.T - G.ball.air.t < .45){ armF("L", 2.2, .3); armF("R", 2.2, .3); }
   else if (held && p.role === "QB" && G.sub === "pre" && G.phase === "live"){ armF("L", .8, 1.2); armF("R", .9, 1.3); }
+  else if (held && (p.protect || p.cover > 0)){ armF("L", .45, 1.75); armF("R", .55, 1.85); bend(b[BONE("R_UpperArm")], fwd, -.3); }   // both arms over the ball
   else if (held){ armF("L", .3, 1.6); bend(b[BONE("L_UpperArm")], fwd, .25); }
   else if (p.engaged || (p.blockT && p.blockT.engaged === p && G.phase === "live")){ armF("L", 1.2, .6); armF("R", 1.2, .6); }
   if (stance && LINEMEN.has(p.role)) armF("R", 1.0, 0);
@@ -3300,7 +3311,7 @@ function weatherTick(dt){
 function startGame(){
   G.gen++; resetGameUI(); G.counted = false;
   track(G.career ? "game-start-career" : "game-start");
-  cgSDK(sdk => sdk.game.gameplayStart());
+  cgLoaded(); cgSDK(sdk => sdk.game.gameplayStart());   // loading always ends before gameplay starts
   audioInit();
   if (G.userIsHome === undefined) G.userIsHome = true;
   buildStadium(venue(), visitor());
@@ -3442,7 +3453,8 @@ function drawDef(cv, id){
 function arrow(x, x0,y0,x1,y1,c){ const a = Math.atan2(y1-y0,x1-x0); x.fillStyle=c; x.beginPath(); x.moveTo(x1,y1); x.lineTo(x1-8*Math.cos(a-.5), y1-8*Math.sin(a-.5)); x.lineTo(x1-8*Math.cos(a+.5), y1-8*Math.sin(a+.5)); x.fill(); }
 
 // what each play is weakest against (from the tools/sim.js __matrix table; regenerate it after balance changes)
-// (last regenerated after the shared pass speed + quicker pursuit on throws: __matrix({turbo:true}, 60, 'varsity') x2, averaged)
+// (last regenerated after the shared pass speed + quicker pursuit on throws: __matrix(skilled, 60, 'varsity') x2, averaged, on the
+// pre-hit-stick build that still had a speed burst; regenerate it after the locomotion redesign)
 const COUNTER = {run:"blitz", toss:"zone", draw:"zone", screen:"man", slants:"man", curls:"zone", mesh:"zone", smash:"zone", dig:"blitz", flood:"man", streaks:"man", post:"zone", fade:"zone", seam:"blitz", pa:"zone"};
 const weighted = w => { let r = Math.random()*Object.values(w).reduce((a, b) => a + b, 0); for (const k in w){ if ((r -= w[k]) < 0) return k; } return Object.keys(w)[0]; };
 // the CPU defense scouts you: it leans toward whatever beats the plays you've been calling, and keys on a favorite
@@ -3513,6 +3525,7 @@ function resetState(p){
   Object.assign(p, {slide:0, slideK:0, lastRi:undefined, biteT:0, runT:null, passT:null, tossT:0, fallDir:1, route:null, ri:0, sit:false, assign:null, engaged:null, engageT:0, immune:{}, cool:0, stumble:0, stagger:0, evade:0, juke:0, jukeCool:0,
     dive:0, down:0, think:0, tx:p.x, tz:p.z, pressT:0, blockT:null, isDown:false, catchT:0, throwT:0});
   Object.assign(p, {rushWin:0, beat:false, chips:0, win:0, jukeHold:0, jukeGood:false, bite:false, haloSep:undefined}); if (p.beatSpr) p.beatSpr.visible = false;
+  Object.assign(p, {lunge:0, hitCool:0, hit:null, protect:false, cover:0, coverRoll:false, bhT:0, bhOff:0}); if (p.warnSpr) p.warnSpr.visible = false; if (p.protSpr) p.protSpr.visible = false;
 }
 
 function startPresnap(playId, defCall){
@@ -3613,10 +3626,10 @@ function snap(){
   if (G.poss === 0 && !G.special){ const pk = PLAYS[G.offPlay] && PLAYS[G.offPlay].kind;
     later(() => { if (G.phase !== "live" || G.poss !== 0) return;
       if (pk === "pass" && G.sub === "pre") coach("throw", "Throw it!", i => (i === "touch" ? "<b>Hold</b> a receiver's number button" : i === "pad" ? "<b>Hold</b> <kbd>X</kbd> <kbd>Y</kbd> or <kbd>B</kbd> (receivers 1, 2, 3)" : "<b>Click and hold</b> on a receiver (or hold his number key)") + ". A ring shrinks around him: <b>let go when it closes</b>. Pick the one with nobody near him.");
-      else if (pk !== "pass" && G.carrier && G.carrier.team === 0) coach("run", "Run it!", i => (i === "touch" ? "<b>Drag</b> the left side of the screen to steer. Hold <b>TURBO</b> to burst, tap <b>JUKE</b> when a tackler is close." : i === "pad" ? "Steer with the <b>left stick</b>. Hold <kbd>RT</kbd> for turbo, press <kbd>A</kbd> to juke a tackler." : "Steer with <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> or arrows. Hold <kbd>Shift</kbd> for turbo, <kbd>Space</kbd> to juke a tackler.") + " Find the hole and go.");
+      else if (pk !== "pass" && G.carrier && G.carrier.team === 0) coach("run", "Run it!", i => (i === "touch" ? "<b>Drag</b> the left side of the screen to steer, tap <b>JUKE</b> when a tackler is close. In traffic, hold <b>PROTECT</b>." : i === "pad" ? "Steer with the <b>left stick</b>, press <kbd>A</kbd> to juke a tackler. In traffic, hold <kbd>RT</kbd> to protect the ball." : "Steer with <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> or arrows, <kbd>Space</kbd> to juke a tackler. In traffic, hold <kbd>Shift</kbd> to protect the ball.") + " Find the hole and go.");
     }, pk === "pass" ? 450 : 650); }
   G.runoff = 0;
-  G.phase = "live"; G.playT = 0; G.sub = "pre"; G.windup = null; G.aim = null; if (G.aimRing) G.aimRing.visible = false; G.completed = false; G.fumbleRec = false; G.loose = null; G.los0 = G.los; G.turnover = false; recStart();
+  G.phase = "live"; G.playT = 0; G.sub = "pre"; G.windup = null; G.aim = null; if (G.aimRing) G.aimRing.visible = false; G.completed = false; G.fumbleRec = false; G.loose = null; G.los0 = G.los; G.turnover = false; G.bigHit = 0; recStart();
   const O = teams[G.poss], qb = O.find(p => p.role === "QB");
   G.ball.held = qb; G.carrier = qb; G.qbDecideT = rand(1.2, 1.7); startXfer(qb, .32, .45);   // shotgun snap
   if (PLAYS[G.offPlay].kind === "pass") passPro(G.poss);
@@ -3652,7 +3665,7 @@ function accelTo(p, vx, vz, dt){
   // a soft cut (under ~60 degrees) keeps most of the speed and bends the path; only a hard cut plants and brakes
   // (the man you control and the ball carrier; CPU movement keeps its tuned feel)
   const agile = p === G.user || p === G.carrier, ang = Math.atan2(Math.abs(lat), along), wantAlong = agile && ang < 1.05 ? ts*(1 - .2*ang) : along;
-  // coming off a turbo burst or a juke above top speed: ease back down instead of hitting a wall
+  // coming off a juke or a lunge above top speed: ease back down instead of hitting a wall
   const overTop = sp > top*1.03 && wantAlong > top*.85;
   const dAlong = clamp(wantAlong - sp, -(overTop ? a*.55 : aDown)*dt, aUp*dt);
   const aLat = a * ((agile ? 1.6 : 1.25) - .6*Math.min(1, frac)) * (p === G.user ? 1.2 : 1); // tighter turns when slower
@@ -3843,7 +3856,7 @@ function userChase(){
   const [p] = nearest(teams[0], G.carrier); if (p) G.user = p; setAct("DIVE"); $("switch").hidden = false;
 }
 
-const input = {jx:0, jy:0, turbo:false, keys:{}, touchActive:false, idleT:9};
+const input = {jx:0, jy:0, hitBy:{key:false, mouse:false, touch:false, pad:false}, keys:{}, touchActive:false, idleT:9};   // hitBy: who's holding HIT/PROTECT
 function userVector(){
   let x = input.jx, y = input.jy;
   const k = input.keys;
@@ -3861,9 +3874,6 @@ function update(dt){
   const crowdBase = G.phase === "live" ? .32 : (G.phase === "meter" || G.phase === "kick" || (G.phase === "presnap" && G.fg)) ? .06
     : G.phase === "presnap" && G.poss === 1 && !G.special && G.userIsHome !== false ? .55 : .22;
   G.crowd += (crowdBase - G.crowd) * Math.min(1, dt*.8);
-  const turboOn = input.turbo && G.phase === "live" && G.user && userVector().m > .15 && !(G.user === G.carrier && G.sub === "pre");
-  G.turbo = clamp(G.turbo + (turboOn ? -.42 : .22)*dt, 0, 1);
-  if (!G.stepping || G.lastSub) $("turboFill").style.transform = `scaleY(${G.turbo})`;
   // the ball travels from hand to hand (snap, handoff, long snap) instead of teleporting
   if (G.xfer){ G.xfer.t += dt; if (G.xfer.t >= G.xfer.T || !G.ball || G.ball.held !== G.xfer.to) G.xfer = null; }
 
@@ -3960,9 +3970,10 @@ function update(dt){
       if (r && rd < 1.3 && (G.ball.y < .9 || (rd < .8 && G.ball.y < 1.7))){
         r.face = r.wantF = Math.atan2(G.ball.x - r.x, G.ball.z - r.z);
         G.carrier = r; G.ball.held = r; G.fumbleRec = true; r.down = .8;
-        // fell on it in the end zone he's attacking: that's six (in overtime a defensive recovery is just dead)
+        // fell on it in the end zone he's attacking: that's six (in overtime a defensive recovery is just dead; on a return
+        // only the cover team can, when the returner coughs it up at his own goal line)
         const ez = r.team === 0 ? G.ball.x >= 100 : G.ball.x <= 0;
-        return endPlay({type: ez && !G.special && !(G.ot && r.team !== G.poss) ? "td" : "tackle", x: G.ball.x, z: G.ball.z});
+        return endPlay({type: ez && (G.special ? r.team === G.special.kickTeam && !L.onside : !(G.ot && r.team !== G.poss)) ? "td" : "tackle", x: G.ball.x, z: G.ball.z});
       }
     }
   }
@@ -3997,11 +4008,14 @@ function update(dt){
     else if (p.down > 0){ p.down -= dt; const f = Math.exp(-13.4*dt); p.vx *= f; p.vz *= f; }
     p.x += p.vx*dt; p.z += p.vz*dt;
     p.cool -= dt; p.stumble -= dt; p.stagger -= dt; p.juke -= dt; p.jukeCool -= dt; p.throwT -= dt; p.catchT -= dt; p.kickT = (p.kickT || 0) - dt;
+    p.lunge -= dt; p.hitCool -= dt; p.cover -= dt;
   }
   separate(all);
   if (G.ot && G.carrier && G.carrier.team !== G.poss && !G.special) return endPlay({type:"tackle"});   // overtime: no returns on turnovers
+  if (G.carrier) hitWatch(dt);
   if (G.carrier) carrierChecks(dt);
   if (G.phase !== "live") return;
+  hitAfter();
   // clock (tries for point and overtime are untimed)
   if (!G.twoPt && !G.ot) G.clock -= dt;
 }
@@ -4038,6 +4052,7 @@ function settle(dt){
 }
 function think(p, dt, uv){
   if (p.dive > 0 || p.down > 0) return;
+  if (p.lunge > 0) return lungeAI(p, dt);                            // a hit-stick lunge is committed: no steering until it lands or whiffs
   const off = G.poss, d = dirOf(off), carrier = G.carrier, sub = G.sub;
   const isOff = p.team === off;
   const ctl = p === G.user;
@@ -4053,9 +4068,9 @@ function think(p, dt, uv){
     if (p.tossT > 0 && carrier === p){ p.tossT -= dt; if (Math.abs(fz) < .5){ const w = clamp(p.tossT/1.25, 0, 1), dd = dirOf(p.team); fz = fz*(1 - w) + p.tossSide*.85*w; fx = fx*(1 - w*.5) + dd*.45*w; m = Math.max(m, .9); } }
     if (p.jukeHold > 0){ p.jukeHold -= dt; return; }                    // a juke's plant-and-cut plays out before the stick steers again
     const qbRun = carrier === p && p.role === "QB";                    // quarterbacks aren't backs: slower with it, less burst
-    const boost = input.turbo && G.turbo > .02 ? (qbRun ? 1.1 : 1.22) : 1;
-    const sp = p.maxSpeed * Math.min(1, m*1.25) * boost * mul * (qbRun ? .9 : 1);
-    p.accel = ACCEL(p.role) * 1.2 * (boost > 1 ? 1.25 : 1); accelTo(p, fx*sp, fz*sp, dt);   // turbo is a burst, not just a higher top speed
+    // your ball carrier (not a QB) gets a quicker first step and a touch more top end: the run game's speed now that there's no burst button
+    const back = carrier === p && !qbRun, sp = p.maxSpeed * Math.min(1, m*1.25) * mul * (qbRun ? .9 : back ? CARRY.spd : 1) * (p.protect ? HIT.protSpd : 1);
+    p.accel = ACCEL(p.role) * 1.2 * (back ? CARRY.acc : 1); accelTo(p, fx*sp, fz*sp, dt);
     return;
   }
   if (ctl && carrier === p && sub === "pre"){ if (p.jukeHold > 0){ p.jukeHold -= dt; return; } p.accel = ACCEL(p.role) * 1.2;
@@ -4374,11 +4389,10 @@ function runnerAI(p, dt, mul){
   const sp = p.maxSpeed * mul;
   accelTo(p, fx/m*sp, fz/m*sp, dt);
 }
-// juke: a hard plant-and-cut to one side of the way he's running (not a world-axis snap). It costs your turbo,
+// juke: a hard plant-and-cut to one side of the way he's running (not a world-axis snap). Its cooldown is the limit,
 // and it only works when it's timed: cut when a tackler is 1.3-3.2 yd away. Juking at nobody just costs a step.
 function doJuke(p, wx, wz){
-  if (p.jukeCool > 0) return;
-  if (p === G.user && p.team === 0){ if (G.turbo < .2) return; G.turbo -= .2; }
+  if (p.jukeCool > 0 || p.protect) return;                           // both arms on the ball: no cuts
   const m = Math.hypot(p.vx, p.vz), hx = m > 1 ? p.vx/m : dirOf(p.team), hz = m > 1 ? p.vz/m : 0;
   const side = Math.sign(hx*wz - hz*wx) || p.jukeSide || 1, nx = -hz*side, nz = hx*side, fwd = Math.max(3, m*.65), lat = Math.min(6.5, Math.max(3, m*.75));   // about his current speed: a cut, not a burst
   p.vx = hx*fwd + nx*lat; p.vz = hz*fwd + nz*lat;
@@ -4386,13 +4400,198 @@ function doJuke(p, wx, wz){
   p.jukeGood = ed > 1.3 && ed < 3.2; if (ed >= 3.2) p.stumble = .25;
   p.juke = .3; p.jukeHold = .16; p.jukeCool = p.role === "QB" && G.sub === "pre" ? 2 : 1.6; p.jukeSide = side; SFX.juke();
 }
+/* ---------- hit stick and ball security ----------
+   On defense Shift, the right mouse button, RT/RB (or a right-stick flick at him) or the orange button is HIT: a short committed lunge at the ball
+   carrier. Timing is the skill: a ring on him closes as you do and goes green when a lunge started now would land
+   (from the gap, the lunge speed and where he's running). Green = a BIG HIT: a sure tackle, he goes flying, and the ball can
+   come out (best from his blind side, dead center of the window). Early = you lunge at air and go down. Late (already on
+   him) = an ordinary tackle. A well-timed juke still beats it. With the ball, holding the same input PROTECTS it: both arms
+   on the ball, a step slower, no jukes, hits rarely knock it loose. A CPU tackler lining up a blindside shot on your
+   carrier gets a red "!" first; only a telegraphed hit can be a big one. CPU carriers cover up in traffic sometimes. */
+const HIT = {
+  lunge: .24, win: .75, reach: 1.05, lo: .22, perf: .17, cool: 1.1, whiff: .7, ring: 5,  // lunge (s); share of its straight-line range the window promises (runners veer and cut); contact reach;
+                                                                             // window floor (share of the range); perfect half-width (window units); cooldown; whiff time on the turf; ring range (yd)
+  gT: .14, pT: .05,                                                          // green / perfect half-widths in seconds at most: a slow close stretches the window, not the skill (the throw ring's green is +-.075 s)
+  big: .17, perfect: .24, blind: 1.35,                                       // big-hit fumble odds: good / perfect, x blindside
+  plain: [.013, .02],                                                        // ordinary tackle fumble odds: your carrier / a CPU carrier
+  cpuBig: .12, warnD: 5.5, warnClose: 3, cone: .45, warnRead: .3,           // CPU big hit on your carrier; its "!": range, closing speed (yd/s), outside his facing cone (cos: ~63 deg), up this long before it counts
+  protect: .15, protSpd: .9, cover: .3, coverP: .55,                         // PROTECT: fumble odds x, speed x; a CPU carrier covering up: odds x, chance he does in traffic
+};
+// your ball carrier (not a QB): top speed x, first step x. A light retune for losing the old speed-burst button (skilled runs at
+// ~91% of the old yards, see docs/gp_hit_notes.md); the locomotion redesign will retune speeds again, so don't fit this closely.
+const CARRY = {spd: 1.01, acc: 1.25};
+const hitHeld = () => input.hitBy.key || input.hitBy.mouse || input.hitBy.touch || input.hitBy.pad;
+const lungeSpeed = u => clamp(Math.hypot(u.vx, u.vz) + 3.5, 8, 10.5);
+// cos of the angle between the carrier's heading and a tackler: under HIT.cone he's beside or behind him (the blind side)
+function blindCos(c, e){ const sp = Math.hypot(c.vx, c.vz), hx = sp > 1 ? c.vx/sp : Math.sin(c.face), hz = sp > 1 ? c.vz/sp : Math.cos(c.face), dx = e.x - c.x, dz = e.z - c.z, d = Math.hypot(dx, dz) || 1; return (hx*dx + hz*dz)/d; }
+// the hit window: a lunge started now covers `hi` yd of gap (his own speed away from you counts against it); inside `lo` you're
+// already on him. s: 0..1 across that range, .5 dead center (>1 early, <0 late). close: how fast the gap is shrinking now.
+// The green (gw) and perfect (pw) half-widths are in s units, capped in time so closing slowly doesn't make it a gimme.
+function hitWindow(u, c){
+  const dx = c.x - u.x, dz = c.z - u.z, d = Math.hypot(dx, dz) || 1e-3, nx = dx/d, nz = dz/d;
+  const hi = Math.max(.5, (lungeSpeed(u) - (c.vx*nx + c.vz*nz))*HIT.lunge*HIT.win), lo = hi*HIT.lo, g = d - HIT.reach;
+  const close = (u.vx - c.vx)*nx + (u.vz - c.vz)*nz, tw = (hi - lo)/Math.max(.5, close);   // how long the whole range lasts at this closing speed
+  return {d, g, lo, hi, s: (g - lo)/(hi - lo), close, gw: Math.min(.5, HIT.gT/tw), pw: Math.min(HIT.perf, HIT.pT/tw)};
+}
+const hitGrade = w => w.s > .5 + w.gw ? "early" : w.s < .5 - w.gw ? "late" : Math.abs(w.s - .5) < w.pw ? "perfect" : "good";
+// the ring is up (in range and running the gap down): the one test for both the HUD and the press, so a big hit always had a green ring
+const hitShown = w => w.d <= HIT.ring + HIT.reach && w.close >= .5;
+// the press (any input): on defense, lunge; with the ball it's a hold (PROTECT), read every frame in hitWatch
+function hitDown(){
+  if (G.paused || G.phase !== "live") return;
+  const u = G.user, c = G.carrier;
+  if (u && c && c.team !== u.team) hitStick(u, c);
+}
+function hitStick(u, c){
+  if (u.lunge > 0 || u.hitCool > 0 || u.dive > 0 || u.down > 0 || u.engaged) return false;   // no hit stick out of a block
+  const w = hitWindow(u, c); if (w.d > HIT.ring + HIT.reach) return false;                    // nobody in range: nothing happens
+  u.hit = {grade: hitShown(w) ? hitGrade(w) : "none", s: w.s};                               // no ring (not closing): a plain lunge, a tackle if it reaches him
+  u.lunge = HIT.lunge; u.hitCool = HIT.cool; u.lungeV = lungeSpeed(u); G.hitter = u;
+  lungeAI(u, 0); sfx("whoosh", .45, .85);
+  return true;
+}
+// the lunge homes on where he'll be when it gets there (it's committed: the stick can't steer it)
+function lungeAI(p, dt){
+  const c = G.carrier, v = p.lungeV || 9;
+  if (c && c.team !== p.team){ const T = clamp(dist(p, c)/v, 0, .3), tx = c.x + c.vx*T - p.x, tz = c.z + c.vz*T - p.z, m = Math.hypot(tx, tz) || 1; p.vx = tx/m*v; p.vz = tz/m*v; }
+  else { const m = Math.hypot(p.vx, p.vz) || 1; p.vx = p.vx/m*v; p.vz = p.vz/m*v; }        // he got rid of it: the lunge carries on into air
+}
+// after the contact checks: a lunge that ran out without landing is a whiff (he's on the turf, the runner's gone)
+function hitAfter(){
+  const u = G.hitter;
+  if (u && u.hit && u.lunge <= 0){ u.hit = null; G.hitter = null; u.down = HIT.whiff; u.fallDir = 1; u.vx *= .5; u.vz *= .5; sfx("whoosh", .35, 1.35); sfx("thud", .3, 1.1, .2); flash("WHIFF!"); }
+}
+// how well he holds on to it: rating, weather, and (your team in Coach Mode) morale and the ball-security practice; then PROTECT / covering up
+function ballSec(c){
+  let k = clamp(1 - (RAT(c) - 70)*.02, .4, 1.8) * WX().fum;
+  if (G.career && c.team === 0 && CAR) k *= (CAR.morale < 35 ? 1.8 : CAR.morale > 75 ? .6 : 1) * (CAR.flags.ballSecurity === CAR.week ? .4 : 1);
+  return k * (c.protect ? HIT.protect : c.cover > 0 ? HIT.cover : 1);
+}
+// every frame there's a carrier: PROTECT, CPU carriers covering up, and the blindside "!" over CPU tacklers
+function hitWatch(dt){
+  const c = G.carrier, u = G.user;
+  c.protect = c === u && c.team === 0 && hitHeld() && !(c.role === "QB" && G.sub === "pre");
+  if (c.team === 1){ let n = 0; for (const e of teams[0]) if (e.down <= 0 && dist(e, c) < 3) n++;   // two of your men on him: he may tuck it away
+    if (n >= 2){ if (!c.coverRoll){ c.coverRoll = true; if (Math.random() < HIT.coverP) c.cover = .8; } else if (c.cover > 0) c.cover = Math.max(c.cover, .4); }
+    else c.coverRoll = false; }
+  if (G.protFor && G.protFor !== c) protMark(G.protFor, false);
+  protMark(c, c.protect || c.cover > 0); G.protFor = c;
+  const watch = c.team === 0 && !(c.role === "QB" && G.sub === "pre");
+  for (const e of teams[1]){
+    let on = false;
+    if (watch && e.down <= 0 && e.dive <= 0 && !e.engaged){ const d = dist(e, c);
+      if (d < HIT.warnD) on = ((e.vx - c.vx)*(c.x - e.x) + (e.vz - c.vz)*(c.z - e.z))/(d || 1) > HIT.warnClose && blindCos(c, e) < HIT.cone; }
+    if (on){ e.bhT = (e.bhT || 0) + dt; e.bhOff = 0; } else if (e.bhT > 0 && (e.bhOff = (e.bhOff || 0) + dt) > .25) e.bhT = 0;
+    warnMark(e, e.bhT > 0);
+    if (on && c === u) coach("protect", "Protect the ball", i => `A red <b>!</b> is a tackler coming from your blind side. Hold ${i === "touch" ? "<b>PROTECT</b>" : i === "pad" ? "<kbd>RT</kbd>" : "<kbd>Shift</kbd> (or the right mouse button)"} to cover the ball with both arms: a step slower and no jukes, but a big hit won't knock it loose.`);
+  }
+  if (u && c.team !== u.team && u.team === 0 && u.down <= 0 && !u.engaged && u.hitCool <= 0){ const w = hitWindow(u, c);
+    if (hitShown(w)) coach("hit", "Hit stick", i => `See the ring on the ball carrier? ${i === "touch" ? "Tap <b>HIT</b>" : i === "pad" ? "Press <kbd>RT</kbd> (or flick the right stick at him)" : "Press <kbd>Shift</kbd> (or the right mouse button)"} when it turns <b>green</b> for a big hit that can knock the ball loose, best from his side or behind. Too early and you whiff.`); }
+}
+// a tackle that holds: fumble roll, then the two go down together. big: 0 ordinary, 1 good / 2 perfect hit stick, 3 a CPU blindside shot
+function tackle(e, c, big){
+  const impact = Math.hypot(c.vx - e.vx, c.vz - e.vz), blind = blindCos(c, e) < HIT.cone;
+  const qbRun = c.role === "QB" && G.sub === "run" && !G.special;
+  let fo = 0;
+  if (!G.twoPt && !(G.special && G.special.onside)){
+    const sec = ballSec(c);
+    if (big === 3) fo = HIT.cpuBig*sec;
+    else if (big) fo = (big === 2 ? HIT.perfect : HIT.big)*(blind ? HIT.blind : 1)*sec;
+    else if (c.role !== "QB") fo = HIT.plain[c.team === 0 ? 0 : 1]*sec;
+    // a quarterback running in the open isn't built to take hits: a real fumble risk (DIFF.qbFum, ~15%) unless he slides
+    if (qbRun && impact > 4) fo = Math.max(fo, (G.diff.qbFum || .15)*clamp(1 - (RAT(c) - 70)*.015, .6, 1.4));
+  }
+  const fum = Math.random() < fo;
+  if (G.hitLog) G.hitLog.push({big, blind, fo, fum, by: e === G.user, team: c.team, protect: !!c.protect, cover: c.cover > 0});   // (dev harness)
+  if (big) hitFx(e, c, big);
+  if (fum){
+    // ball pops loose (along the hit on a big one); everybody dives for it
+    e.down = .6; c.down = big ? 1.1 : .9; G.carrier = null; G.ball.held = null; G.sub = "loose"; c.protect = false; protMark(c, false); for (const t of teams) for (const q of t) warnMark(q, false);   // the ball is out: no shield over the fumbler, no "!" left hanging
+    G.loose = {x: c.x + c.vx*.12, z: c.z + c.vz*.12, t:0, from: c.team}; G.ballVy = 5; bigMoment(.3, .6); SFX.hit(10);
+    const kx = big ? e.vx*.45 : 0, kz = big ? e.vz*.45 : 0;
+    G.loose.phys = physBall({x: c.vx*.7 + kx + rand(-2, 2), y: 5 + rand(0, 2), z: c.vz*.7 + kz + rand(-2, 2)}, 60);   // lives until someone falls on it
+    flashT = 0; flash("FUMBLE!"); crowdTo(1); return;
+  }
+  e.down = .6; G.tackled = c;
+  // hit head-on: runner goes over backward; from behind or the side: he's driven forward. A big hit turns him to the hitter and flattens him.
+  const front = ((e.x - c.x)*Math.sin(c.face) + (e.z - c.z)*Math.cos(c.face)) > .2;
+  c.fallDir = front && impact > 4 ? -1 : 1; e.fallDir = 1;
+  if (big && blindCos(c, e) > -.3){ c.face = c.wantF = Math.atan2(e.x - c.x, e.z - c.z); c.fallDir = -1; }
+  // wrap him up: pull the two bodies into contact and let them go down together on shared momentum (a big hit drives him back)
+  { const dx = c.x - e.x, dz = c.z - e.z, dd = Math.hypot(dx, dz) || 1, nx = dx/dd, nz = dz/dd, k = dd - .62;
+    if (k > 0){ c.x -= nx*k*.35; c.z -= nz*k*.35; e.x += nx*k*.65; e.z += nz*k*.65; }
+    const mC = MASS(c), mE = MASS(e); let vx = (c.vx*mC + e.vx*mE)/(mC + mE)*.85, vz = (c.vz*mC + e.vz*mE)/(mC + mE)*.85;
+    if (big){ const kb = Math.max(3.5, Math.hypot(e.vx, e.vz)*.6); vx = nx*kb; vz = nz*kb; c.down = 1.1; }
+    c.vx = e.vx = vx; c.vz = e.vz = vz; e.face = e.wantF = Math.atan2(c.x - e.x, c.z - e.z); }
+  if (!big){ if (impact > 9 || (e.dive > 0 && e === G.user)) bigMoment(.3, .5); else if (impact > 6 || e.dive > 0) bigMoment(.6, .25);
+    SFX.hit(e.dive > 0 ? 11 : impact); sfx("thud", .35, .7, .24 + Math.random()*.09); }    // the hit, then the turf
+  return endPlay({type:"tackle", by:e});
+}
+// the big hit itself: slow motion, a heavy crack and rumble, the stands go "ohh"
+function hitFx(e, c, big){
+  const mine = big !== 3;
+  bigMoment(mine ? .2 : .3, mine ? .85 : .6); SFX.hit(13); tone("sine", 58, 26, .5, .4); sfx("thud", .8, .7, .12); SFX.ooh(); crowdTo(.95);
+  G.bigHit = big;
+}
+// a big hit (or the threat of one) is called on the end-of-play banner: "BIG HIT!" over the gain
+function hitBanner(msg, sub){
+  if (!G.bigHit) return [msg, sub];
+  if (/YD (GAIN|LOSS|RETURN)/.test(msg)) return ["BIG HIT!", msg.charAt(0) + msg.slice(1).toLowerCase() + (sub ? " · " + sub : "")];   // returns keep their spot line
+  return [msg, sub || "Big hit"];
+}
+// everything the hit stick leaves on players (end of play, quit)
+function hitClear(){
+  for (const t of teams) for (const p of t){ p.protect = false; p.hit = null; p.lunge = 0; p.bhT = 0; if (p.warnSpr) p.warnSpr.visible = false; if (p.protSpr) p.protSpr.visible = false; }
+  G.hitter = null; G.protFor = null;
+  if (G.hitRing){ G.hitRing.visible = false; G.hitTgt.visible = false; }
+}
+// sprites: a red "!" over a CPU tackler lining up a blindside shot, and a gold shield over a carrier protecting the ball
+const HITX = {warn: null, prot: null};
+function markSpr(p, key, tex, y, sc){
+  if (!p[key]){ p[key] = new THREE.Sprite(new THREE.SpriteMaterial({map: tex, depthTest: false, transparent: true, toneMapped: false}));
+    p[key].scale.set(sc, sc, 1); p[key].renderOrder = 9; p[key].position.y = y; p.root.add(p[key]); }
+  return p[key];
+}
+function warnMark(p, on){
+  if (!on){ if (p.warnSpr) p.warnSpr.visible = false; return; }
+  if (!HITX.warn){ const c = textCanvas(64, 64), x = c.getContext("2d");   // a red badge with a white "!" (drawn, so no font is needed)
+    x.beginPath(); x.arc(32, 32, 27, 0, Math.PI*2); x.fillStyle = "#ff3b2e"; x.fill(); x.lineWidth = 5; x.strokeStyle = "#2a0505"; x.stroke();
+    x.fillStyle = "#fff"; x.beginPath(); x.moveTo(26, 13); x.lineTo(38, 13); x.lineTo(35, 38); x.lineTo(29, 38); x.closePath(); x.fill(); x.beginPath(); x.arc(32, 47, 5, 0, Math.PI*2); x.fill();
+    HITX.warn = new THREE.CanvasTexture(c); }
+  markSpr(p, "warnSpr", HITX.warn, 2.75, .8).visible = true;
+}
+function protMark(p, on){
+  if (!on){ if (p.protSpr) p.protSpr.visible = false; return; }
+  if (!HITX.prot){ const c = textCanvas(64, 64), x = c.getContext("2d");
+    x.beginPath(); x.moveTo(32, 6); x.lineTo(54, 14); x.quadraticCurveTo(54, 44, 32, 58); x.quadraticCurveTo(10, 44, 10, 14); x.closePath();
+    x.fillStyle = "#ffd23a"; x.fill(); x.lineWidth = 5; x.strokeStyle = "#2a1a00"; x.stroke();
+    x.save(); x.translate(32, 31); x.rotate(-.6); x.beginPath(); x.ellipse(0, 0, 13, 8, 0, 0, Math.PI*2); x.fillStyle = "#7a3b12"; x.fill(); x.fillStyle = "#fff"; x.fillRect(-5, -1, 10, 2); x.restore();
+    HITX.prot = new THREE.CanvasTexture(c); }
+  markSpr(p, "protSpr", HITX.prot, 2.6, .55).visible = true;
+}
+// the ring on the carrier and the context button (HIT / PROTECT / hidden); visual only, from syncMeshes
+function hitHud(){
+  const u = G.user, c = G.carrier, live = G.phase === "live" && !!u && !!c;
+  const mode = !live ? "" : c.team !== u.team ? "hit" : c === u && !(u.role === "QB" && G.sub === "pre") ? "protect" : "";
+  let w = null;
+  if (mode === "hit" && u.lunge <= 0 && u.hitCool <= 0 && u.down <= 0 && u.dive <= 0 && !u.engaged){ w = hitWindow(u, c); if (!hitShown(w)) w = null; }
+  const grade = w && hitGrade(w), go = grade === "good" || grade === "perfect";
+  if (G.hitRing){ G.hitRing.visible = G.hitTgt.visible = !!w;
+    if (w){ const q = (w.s - .5)/w.gw, r = q > 1 ? Math.min(3.4, 1.35 + (w.s - .5 - w.gw)*.65) : q < -1 ? .95 : 1.15 + q*.2;   // closes onto the white target circle (1.1-1.2 yd); dead on it = perfect
+      G.hitRing.position.set(c.x, .06, c.z); G.hitRing.scale.setScalar(r); G.hitTgt.position.set(c.x, .055, c.z);
+      G.hitRing.material.color.set(grade === "perfect" ? 0x5dff8a : go ? 0x2fd36a : grade === "early" ? 0xffd23a : 0xff4d2e); } }
+  const b = $("hit"), cool = mode === "hit" && u.hitCool > 0 ? Math.round(clamp(u.hitCool/HIT.cool, 0, 1)*10) : 0, key = mode + go + cool;
+  if (b.dataset.st === key) return; b.dataset.st = key;
+  b.dataset.k = mode; b.classList.toggle("off", !mode); b.classList.toggle("go", go);
+  b.lastChild.textContent = mode === "protect" ? "PROTECT" : "HIT"; $("hitFill").style.transform = `scaleY(${cool/10})`;
+}
 /* ---------- controls card: every input, for the device you're on ---------- */
 const HOWTO = {
-  touch: [["Move", "Drag anywhere on the left half"], ["Snap · Juke · Dive · Slide", "The big green button (its label changes with the moment)"], ["Turbo", "Hold the orange button (it drains, then refills)"],
+  touch: [["Move", "Drag anywhere on the left half"], ["Snap · Juke · Dive · Slide", "The big green button (its label changes with the moment)"], ["Hit stick · Protect", "The orange button: tap <b>HIT</b> on defense when the ring on the ball carrier turns <b>green</b> (early = whiff). Hold <b>PROTECT</b> with the ball in traffic"],
     ["Throw", "<b>Hold</b> a number 1–5 (or press on the receiver), <b>let go when his ring turns green</b>"], ["Switch defender", "Blue SWITCH button"], ["Field goals", "Drag on the left to <b>aim</b> (mind the wind), tap to start, tap past the white line for <b>power</b>, tap in the <b>green</b>"]],
-  keys: [["Move", "<kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> or arrows"], ["Snap · Juke · Dive · Slide", "<kbd>Space</kbd>"], ["Turbo", "Hold <kbd>Shift</kbd>"],
-    ["Throw", "<b>Click and hold a receiver</b> (or hold <kbd>1</kbd>–<kbd>5</kbd>), <b>let go when the ring turns green</b>"], ["Switch defender", "<kbd>Q</kbd>"], ["Field goals", "<kbd>A</kbd>/<kbd>D</kbd> to <b>aim</b> (mind the wind), <kbd>Space</kbd> to start, again past the white line, again in the green"], ["Pause · Full screen", "<kbd>Esc</kbd> · <kbd>F</kbd>"]],
-  pad: [["Move", "Left stick or d-pad"], ["Snap · Juke · Dive · Slide", "<kbd>A</kbd>"], ["Turbo", "Hold <kbd>RT</kbd>"],
+  keys: [["Move", "<kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> or arrows"], ["Snap · Juke · Dive · Slide", "<kbd>Space</kbd>"], ["Hit stick · Protect", "<kbd>Shift</kbd> or right-click on defense when the ring on the ball carrier turns <b>green</b> (early = whiff). Hold it with the ball to protect it"],
+    ["Throw", "<b>Click and hold a receiver</b> (or hold <kbd>1</kbd>–<kbd>5</kbd>), <b>let go when the ring turns green</b>"], ["Switch defender", "<kbd>Q</kbd>"], ["Field goals", "<kbd>A</kbd>/<kbd>D</kbd> to <b>aim</b> (mind the wind), <kbd>Space</kbd> to start, again past the white line, again in the green"], (window.HC_PORTAL ? ["Pause", "<kbd>P</kbd> or <kbd>Esc</kbd>"] : ["Pause · Full screen", "<kbd>P</kbd>/<kbd>Esc</kbd> · <kbd>F</kbd>"])],
+  pad: [["Move", "Left stick or d-pad"], ["Snap · Juke · Dive · Slide", "<kbd>A</kbd>"], ["Hit stick · Protect", "<kbd>RT</kbd> (or flick the right stick at him) on defense when the ring on the ball carrier turns <b>green</b> (early = whiff). Hold <kbd>RT</kbd> with the ball to protect it"],
     ["Throw", "<b>Hold</b> <kbd>X</kbd> <kbd>Y</kbd> <kbd>B</kbd> <kbd>LB</kbd> <kbd>LT</kbd> for receivers 1–5, <b>release on green</b>"], ["Switch defender", "<kbd>LB</kbd> (on defense)"], ["Field goals", "Left stick to <b>aim</b>, <kbd>A</kbd> to start, again past the white line, again in the green"], ["Pause", "<kbd>Start</kbd>"]],
 };
 const HOWTO_TIPS = ["The line holds about three seconds. Find your man before the edge rusher gets home.",
@@ -4400,7 +4599,8 @@ const HOWTO_TIPS = ["The line holds about three seconds. Find your man before th
   "Run with your QB? <b>SLIDE</b> before the hit. QBs who take shots put the ball on the ground.",
   "A toss gets the back to the edge. Let him get outside before you turn upfield.",
   "Better players play better: fast backs, sure-handed receivers and big linemen change everything.",
-  "A big, pulsing glow behind a receiver's number means he's open. A small, faint one means he's covered."];
+  "A big, pulsing glow behind a receiver's number means he's open. A small, faint one means he's covered.",
+  "Big hits come from the blind side. A red <b>!</b> over a tackler means hold <b>PROTECT</b>; on defense, hit them from the side for the fumble."];
 function showHowto(done){
   const box = $("howto"); let tab = usingPad ? "pad" : usingTouch ? "touch" : "keys";
   const draw = () => {
@@ -4512,38 +4712,19 @@ function carrierChecks(dt){
   if ((c.team === 0 && c.x >= 100) || (c.team === 1 && c.x <= 0)) return endPlay({type:"td"});
   if (Math.abs(c.z) > HALF_W || c.x < -10 || c.x > 110) return endPlay({type:"out"});
   for (const e of teams[1-c.team]){
-    if (e.down > 0 || e.cool > 0) continue;
-    const reach = e.dive > 0 ? 1.3 : 1.05;
+    if (e.down > 0 || (e.cool > 0 && !e.hit)) continue;   // a lunge right after a broken tackle still lands (the ring showed it)
+    const reach = e.dive > 0 ? 1.3 : e.hit ? HIT.reach + .15 : 1.05;
     if (dist(e, c) > reach) continue;
     if (e.engaged && e.dive <= 0 && dist(e, c) > .7) continue;
-    const armOnly = e.engaged && e.dive <= 0;                // still locked with a blocker: one arm free
-    if (Math.random() < tackleProb(e, c)*(armOnly ? .3 : 1)){
-      const impact = Math.hypot(c.vx - e.vx, c.vz - e.vz);
-      const fumbleOdds = .035 * WX().fum * (G.career && c.team === 0 && CAR ? (CAR.morale < 35 ? 1.8 : CAR.morale > 75 ? .6 : 1) * (CAR.flags.ballSecurity === CAR.week ? .4 : 1) : 1);
-      // a quarterback running in the open isn't built to take hits: a real fumble risk (DIFF.qbFum, ~15%) unless he slides
-      const qbRun = c.role === "QB" && G.sub === "run" && !G.special;
-      if (!G.special && !G.twoPt && ((qbRun && impact > 4 && Math.random() < (G.diff.qbFum || .15)*clamp(1 - (RAT(c) - 70)*.015, .6, 1.4)) ||
-          (impact > 9.5 && c.role !== "QB" && Math.random() < fumbleOdds*clamp(1 - (RAT(c) - 70)*.02, .4, 1.8)))){
-        // ball pops loose; everybody dives for it
-        e.down = .6; c.down = .9; G.carrier = null; G.ball.held = null; G.sub = "loose";
-        G.loose = {x: c.x + c.vx*.12, z: c.z + c.vz*.12, t:0, from: c.team}; G.ballVy = 5; bigMoment(.3, .6); SFX.hit(10);
-        G.loose.phys = physBall({x: c.vx*.7 + rand(-2, 2), y: 5 + rand(0, 2), z: c.vz*.7 + rand(-2, 2)}, 60);   // lives until someone falls on it
-        flash("FUMBLE!"); crowdTo(1); return;
-      }
-      e.down = .6; G.tackled = c;
-      // hit head-on: runner goes over backward; from behind or the side: he's driven forward
-      const front = ((e.x - c.x)*Math.sin(c.face) + (e.z - c.z)*Math.cos(c.face)) > .2;
-      c.fallDir = front && impact > 4 ? -1 : 1; e.fallDir = 1;
-      // wrap him up: pull the two bodies into contact and let them go down together on shared momentum
-      { const dx = c.x - e.x, dz = c.z - e.z, dd = Math.hypot(dx, dz) || 1, nx = dx/dd, nz = dz/dd, k = dd - .62;
-        if (k > 0){ c.x -= nx*k*.35; c.z -= nz*k*.35; e.x += nx*k*.65; e.z += nz*k*.65; }
-        const mC = MASS(c), mE = MASS(e), vx = (c.vx*mC + e.vx*mE)/(mC + mE)*.85, vz = (c.vz*mC + e.vz*mE)/(mC + mE)*.85;
-        c.vx = e.vx = vx; c.vz = e.vz = vz; e.face = e.wantF = Math.atan2(c.x - e.x, c.z - e.z); }
-      if (impact > 9 || (e.dive > 0 && e === G.user)) bigMoment(.3, .5); else if (impact > 6 || e.dive > 0) bigMoment(.6, .25);
-      SFX.hit(e.dive > 0 ? 11 : impact); sfx("thud", .35, .7, .24 + Math.random()*.09);    // the hit, then the turf
-      return endPlay({type:"tackle", by:e});
-    }
-    e.cool = .75; e.stumble = .55; sfx("pads", .45, 1.15); sfx("whoosh", .25, 1.3);     // broken tackle: glancing contact
+    let grip = e.engaged && e.dive <= 0 ? .3 : 1, early = false;   // still locked with a blocker: one arm free
+    if (e.hit){ const h = e.hit; e.hit = null; e.lunge = 0; G.hitter = null;   // the hit stick lands: in the window it's a big hit (a timed juke still slips it)
+      if ((h.grade === "good" || h.grade === "perfect") && !(c.juke > 0 && c.jukeGood)) return tackle(e, c, h.grade === "perfect" ? 2 : 1);
+      if (h.grade === "early"){ grip = .15; early = true; } }   // lunged too soon and he ran into it anyway: off balance, an arm at best
+    if (Math.random() < tackleProb(e, c)*grip)
+      return tackle(e, c, c.team === 0 && e.team === 1 && e.bhT >= HIT.warnRead && blindCos(c, e) < HIT.cone + .15 ? 3 : 0);   // a telegraphed blindside shot is a big hit
+    if (early){ e.down = HIT.whiff; e.fallDir = 1; flash("WHIFF!"); }                   // bounced off him and went down: same as a whiff
+    else { e.cool = .75; e.stumble = .55; }
+    sfx("pads", .45, 1.15); sfx("whoosh", .25, 1.3);     // broken tackle: glancing contact
     // breaking a tackle costs the runner a step: he spins off the hit, knocked sideways away from the tackler, and is off balance for a beat
     { const sp = Math.hypot(c.vx, c.vz) || 1, hx = c.vx/sp, hz = c.vz/sp, side = Math.sign(hx*(c.z - e.z) - hz*(c.x - e.x)) || 1;
       c.vx = c.vx*.9 - hz*side*1.2; c.vz = c.vz*.9 + hx*side*1.2; c.stagger = .2; }
@@ -4556,6 +4737,7 @@ function carrierChecks(dt){
 function endPlay(res){
   if (G.phase !== "live") return;
   if (res.oob) physStop();                 // a ball out of bounds is dead: stop its body so it can't move (or bounce) under the replay
+  hitClear();
   if (G.special) return endSpecial(res);
   if (G.twoPt){
     G.phase = "dead"; SFX.whistle(true, .2); G.twoPt = false; G.icons.forEach(s => s.visible = false); $("recv").hidden = true; G.target.visible = false;
@@ -4623,9 +4805,10 @@ function endPlay(res){
   G.runoff = (!stop && !scored && nextPoss === off && !G.ot) ? clamp(G.clock, 0, 7) : 0; G.clock -= G.runoff;
   if (nextPoss !== off || scored){ setPossession(nextPoss, spot); }
   else { G.los = clamp(spot, .5, 99.5); }
-  if (msg) banner(msg, sub, playMood(res, msg, off, cTeam, nextPoss));
+  if (msg){ const mood = playMood(res, msg, off, cTeam, nextPoss); [msg, sub] = hitBanner(msg, sub); banner(msg, sub, mood); }
   drawScoreboard(); hudUpdate();
-  const bigGain = c && cTeam === off && (clamp(c.x,0,100) - G.los0)*d >= 25;
+  const bigGain = c && cTeam === off && (clamp(c.x,0,100) - G.los0)*d >= 25, bigHit = G.bigHit && G.bigHit !== 3 && Math.random() < .5; G.bigHit = 0;   // half your big hits get the replay
+  if (bigHit && !bigGain && !G.turnover && !G.fumbleRec && res.type !== "td") return later(() => startReplay(() => later(afterPlay, 300)), 1500);
   const after = res.type === "td" ? () => cutaway(cTeam === 0 ? "cheer" : "fans", 2.4, afterPlay)
     : (bigGain && cTeam === 0 && Math.random() < .5) ? () => cutaway("fans", 1.6, afterPlay) : () => later(afterPlay, 300);
   if (res.type === "td" || G.turnover || G.fumbleRec || bigGain) later(() => startReplay(after), 1500);
@@ -4932,7 +5115,7 @@ function startKickoff(kt, spot){
     openMeter("kickoff", (pw, ac) => launchSpecial(pw, ac));
   }
   else { G.phase = "presnap"; setAct("JUKE");
-    if (onsideTime && G.clock < 120 && G.score[1] < G.score[0] && G.score[0] - G.score[1] <= 8){ G.special.onside = true; G.user = teams[0].find(p => p.role === "B3") || G.user; } coach("return", "Kick return", i => `Your returner catches it on his own. Then ${i === "touch" ? "<b>drag</b> on the left to steer, hold <b>TURBO</b> to burst, tap <b>JUKE</b>" : i === "pad" ? "steer with the <b>left stick</b>, hold <kbd>RT</kbd> to burst, press <kbd>A</kbd> to juke" : "steer with <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd>, hold <kbd>Shift</kbd> to burst, <kbd>Space</kbd> to juke"} when a tackler gets close. Follow your blockers' wall.`,
+    if (onsideTime && G.clock < 120 && G.score[1] < G.score[0] && G.score[0] - G.score[1] <= 8){ G.special.onside = true; G.user = teams[0].find(p => p.role === "B3") || G.user; } coach("return", "Kick return", i => `Your returner catches it on his own. Then ${i === "touch" ? "<b>drag</b> on the left to steer, tap <b>JUKE</b>" : i === "pad" ? "steer with the <b>left stick</b>, press <kbd>A</kbd> to juke" : "steer with <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd>, <kbd>Space</kbd> to juke"} when a tackler gets close, and hold ${i === "touch" ? "<b>PROTECT</b>" : i === "pad" ? "<kbd>RT</kbd>" : "<kbd>Shift</kbd>"} in traffic. Follow your blockers' wall.`,
     () => later(() => { if (G.special && G.phase === "presnap") launchSpecial(...cpuKick("kickoff")); }, 1400)); }
 }
 // trailing late: kick it deep or try an onside kick
@@ -4958,7 +5141,7 @@ function startPunt(kt){
 }
 function launchSpecial(pw, ac){
   G.special.power = pw; G.special.acc = ac;
-  G.phase = "live"; G.sub = "approach"; G.playT = 0; SFX.whistle(); recStart();
+  G.phase = "live"; G.sub = "approach"; G.playT = 0; G.fumbleRec = false; G.bigHit = 0; SFX.whistle(); recStart();
   if (G.special.kind === "punt"){ const pp = teams[G.special.kickTeam].find(p => p.role === "P"); if (pp){ G.ball.held = pp; startXfer(pp, .55, .8); } }
   setAct(G.special.kickTeam === 0 ? "DIVE" : G.special.kind === "punt" ? "FAIR CATCH" : "JUKE");
   $("switch").hidden = G.special.kickTeam !== 0;
@@ -5028,16 +5211,18 @@ function specialAI(p, dt, mul){
 }
 function endSpecial(res){
   if (G.phase !== "live") return;
+  hitClear();
   G.phase = "dead"; if (res.type !== "td") SFX.whistle(false, .25); G.target.visible = false;
   const sp = G.special, kt = sp.kickTeam, rt = 1 - kt, c = G.carrier;
   G.special = null;
   let msg = "", sub = "", spot = 0, z = 0, newPoss = rt;
   const ownEZ = x => rt === 0 ? x <= 0 : x >= 100;
   if (res.type === "td"){
+    if (c.team === kt) G.stats[rt].to++;                                  // the cover team fell on a fumble in the end zone
     G.score[c.team] += 6; c.celebrate = true; bigMoment(.35, .2); G.refSignal = "td"; startHero(c);
     SFX.td(c.team); crowdTo(c.team === 0 ? 1 : .15, c.team); if (c.team === 1) SFX.boo();
     G.pending = {type:"pat", team:c.team}; setPossession(c.team, c.team === 0 ? 97 : 3);
-    banner(sp.kind === "punt" ? "PUNT RETURN TD!" : "KICK RETURN TD!", teamName(c.team).toUpperCase(), c.team === 0 ? "good" : "bad");
+    banner(c.team === kt ? "FUMBLE RECOVERY TD!" : sp.kind === "punt" ? "PUNT RETURN TD!" : "KICK RETURN TD!", teamName(c.team).toUpperCase(), c.team === 0 ? "good" : "bad");
     drawScoreboard(); hudUpdate(); return later(() => startReplay(() => cutaway(c.team === 0 ? "cheer" : "fans", 2.4, afterPlay)), 1600);
   }
   if (res.type === "touchback"){ spot = rt === 0 ? 20 : 80; msg = "TOUCHBACK"; }
@@ -5046,14 +5231,18 @@ function endSpecial(res){
   else if (res.type === "downed"){ spot = res.x; z = res.z; msg = sp.kind === "punt" ? "PUNT DOWNED" : "BALL DOWNED"; }
   else if (sp.onside && c){ spot = clamp(c.x, 1, 99); z = c.z; newPoss = c.team; msg = c.team === kt ? "ONSIDE KICK RECOVERED!" : "ONSIDE KICK FAILS";
     if (c.team === 0) crowdTo(1); }
+  else if (G.fumbleRec && c && c.team === kt){ spot = clamp(c.x, 1, 99); z = c.z; newPoss = kt; G.stats[rt].to++;   // the returner coughed it up and the cover team fell on it
+    msg = kt === 0 ? "FUMBLE! WE GOT IT" : "FUMBLE! LOST IT"; if (kt === 0) crowdTo(1); }
   else {
     const x = clamp(c.x, -9.9, 109.9); z = c.z;
     if (ownEZ(x)){ spot = rt === 0 ? 20 : 80; msg = "TOUCHBACK"; }
-    else { spot = x; const ry = Math.round((x - G.catchX)*dirOf(rt)); G.stats[rt].ret += Math.max(0, ry); msg = `${Math.max(0, ry)} YD RETURN`; if (ry >= 25) crowdTo(rt === 0 ? 1 : .2, rt); }
+    else { spot = x; const ry = Math.round((x - G.catchX)*dirOf(rt)); G.stats[rt].ret += Math.max(0, ry); msg = `${Math.max(0, ry)} YD RETURN`; if (ry >= 25) crowdTo(rt === 0 ? 1 : .2, rt);
+      if (G.fumbleRec){ msg = "FUMBLE"; sub = "Recovered"; } }
   }
   if (ownEZ(spot) && newPoss === rt) spot = rt === 0 ? 20 : 80;
   setPossession(newPoss, spot); G.ballZ = clamp(z, -HASH, HASH);
-  sub = `${teamName(newPoss)} ball · ${spotText()}`;
+  sub = (sub ? sub + " · " : "") + `${teamName(newPoss)} ball · ${spotText()}`;
+  [msg, sub] = hitBanner(msg, sub); G.bigHit = 0;
   banner(msg, sub); drawScoreboard(); hudUpdate();
   later(afterPlay, 1700);
 }
@@ -5173,6 +5362,7 @@ function poseTarget(p, sp, A){
   else if (G.phase === "live" && LINEMEN.has(p.role) && G.sub === "pre" && p.team === G.poss) Object.assign(t, {lean:.45, hip:.88, aL:-1.2, aR:-1.2, eL:-.7, eR:-.7});
   if (G.ball && G.ball.held === p){
     if (p.role === "QB" && G.sub === "pre" && G.phase === "live") Object.assign(t, {aL:-.75, aR:-.95, eL:-1.65, eR:-1.55, zL:.35, zR:-.2});
+    else if (p.protect || p.cover > 0) Object.assign(t, {aL:-.45, eL:-2.1, zL:.4, aR:-.6, eR:-1.95, zR:-.45});   // both arms over the ball
     else { t.aL = -.3; t.eL = -2.05; t.zL = .3; }
   }
   if (p.throwT > 0){ const k = 1 - p.throwT/.35; t.aR = -2.8 + k*1.9; t.eR = -1.5 + k*1.3; t.zR = -.25; t.lean = .2 + k*.25; }
@@ -5183,6 +5373,7 @@ function poseTarget(p, sp, A){
   if (pre && p.role === "H") Object.assign(t, {hip:.5, lean:.5, tL:-1.6, tR:.2, kL:2.3, kR:1.8, aL:-1.1, aR:-1.1, eL:-.3, eR:-.3});
   if (pre && (p.role === "KR" || p.role === "UB")) Object.assign(t, {hip:.92, lean:.2, tL:-.2, tR:-.2, kL:.35, kR:.35, aL:-.4, aR:-.4, eL:-.8, eR:-.8});
   if (p.dive > 0) Object.assign(t, {fall:.75, aL:-2.9, aR:-2.9, eL:-.1, eR:-.1, tL:.4, tR:.6, kL:.2, kR:.3});
+  else if (p.lunge > 0) Object.assign(t, {lean:1.05, hip:.86, aL:-1.5, aR:-1.5, eL:-.35, eR:-.35});            // hit stick: shoulder down, arms out
   if (p.down > 0 || (G.phase === "dead" && p === G.tackled)) Object.assign(t, {fall:1, aL:-2.4, aR:-2.2, eL:-.4, eR:-.6, tL:.1, tR:.25, kL:.3, kR:.5});
   if (G.phase === "dead" && p.celebrate){ const j = Math.max(0, Math.sin(performance.now()/90)); Object.assign(t, {fall:0, aL:-2.95, aR:-2.95, eL:-.25, eR:-.25, hip:.98 + j*.18, lean:-.1, tL:-.2*j, tR:-.2*j, kL:.4*j, kR:.4*j}); }
   return t;
@@ -5289,6 +5480,7 @@ function syncMeshes(dt){
     G.fdLine.visible = markers && fd > 0 && fd < 100; G.losLine.visible = markers;
     const u = G.user; G.ring.visible = !!u && G.phase !== "kick" && G.phase !== "final" && G.phase !== "dead" && G.phase !== "toss" && G.phase !== "intro";
     if (u){ G.ring.position.set(u.x, .05, u.z); G.ring.material.color.set(u === G.carrier ? 0xffd23a : 0x6fe3ff); G.ring.scale.setScalar(1 + Math.sin(performance.now()/160)*.06); }
+    hitHud();
     if (G.targets) G.targets.forEach((r,i) => { const s = G.icons[i]; s.position.set(r.x, 2.75, r.z); });
     if (G.targets) G.icons.forEach((s, i) => { if (i >= G.targets.length) s.visible = false; });
     // throw timing: a big screen-space ring closes onto the target circle over the receiver (crisp at any resolution)
@@ -8348,6 +8540,8 @@ $("careerBtn").addEventListener("click", () => { audioInit(); SFX.tick(); openCa
 $("proBtn").addEventListener("click", () => { audioInit(); SFX.tick(); openPro(); });
 if (window.HC_PORTAL){   // portal: no store, and links stay inside the game (attribution kept as plain text)
   $("proBtn").hidden = true;
+  // challenge links point at homecoming.football, a playable web version: portals count that as cross-promotion
+  $("shareMatch").parentElement.hidden = true; $("copyBtn").hidden = true;
   document.querySelectorAll(".credit a").forEach(a => { if (/pro\.html/.test(a.getAttribute("href") || "")){ const sep = a.previousSibling; a.remove(); if (sep && sep.nodeType === 3) sep.textContent = sep.textContent.replace(/·\s*$/, ""); return; }
     const t = document.createElement("span"); t.textContent = a.textContent; a.replaceWith(t); });
 }
@@ -8431,6 +8625,7 @@ function resetGameUI(){
   REC.on = false; physStop();
   if (G.icons) G.icons.forEach(s => { s.visible = false; if (s.halo) s.halo.visible = false; });   // halos are separate sprites in `dynamic`, and syncMeshes doesn't run in the menu
   teams.forEach(t => t.forEach(p => { if (p.beatSpr) p.beatSpr.visible = false; }));
+  hitClear(); G.bigHit = 0;
   if (G.coin) G.coin.visible = false;
 }
 
@@ -8443,7 +8638,7 @@ let stickId = null, sx0 = 0, sy0 = 0;
 const gl = renderer.domElement;
 gl.addEventListener("pointerdown", e => {
   audioInit();
-  if (G.phase === "menu" || G.paused) return;
+  if (G.phase === "menu" || G.paused || (e.pointerType === "mouse" && e.button !== 0)) return;   // the right button is HIT/PROTECT (below)
   if (e.pointerType !== "mouse" && e.clientX < innerWidth*.5 && stickId === null){   // mouse: clicks go to receivers, not the stick
     stickId = e.pointerId; sx0 = e.clientX; sy0 = e.clientY; stick.style.display = "block"; stick.style.left = sx0+"px"; stick.style.top = sy0+"px";
     knob.style.transform = "translate(0,0)"; $("stickHint").style.display = "none"; gl.setPointerCapture(e.pointerId); return;
@@ -8477,13 +8672,17 @@ gl.addEventListener("pointermove", e => {
 });
 const endStick = e => { if (e.pointerId !== stickId) return; stickId = null; input.jx = input.jy = 0; stick.style.display = "none"; };
 gl.addEventListener("pointerup", endStick); gl.addEventListener("pointercancel", endStick);
+// right mouse button = HIT on defense, hold to PROTECT the ball (mousedown: a chorded pointer press doesn't fire pointerdown)
+gl.addEventListener("mousedown", e => { if (e.button !== 2 || G.phase === "menu") return; e.preventDefault(); audioInit(); input.hitBy.mouse = true; hitDown(); });
+addEventListener("mouseup", e => { if (e.button === 2) input.hitBy.mouse = false; });
+gl.addEventListener("contextmenu", e => e.preventDefault());
 const press = (el, down, up) => {
   el.addEventListener("pointerdown", e => { e.preventDefault(); e.stopPropagation(); audioInit(); el.classList.add("on"); down(); });
   const off = e => { el.classList.remove("on"); if (up) up(); };
   el.addEventListener("pointerup", off); el.addEventListener("pointercancel", off); el.addEventListener("pointerleave", off);
 };
 press($("act"), () => userAction());
-press($("turbo"), () => input.turbo = true, () => input.turbo = false);
+press($("hit"), () => { input.hitBy.touch = true; hitDown(); }, () => input.hitBy.touch = false);
 press($("switch"), () => switchPlayer());
 document.querySelectorAll(".rb").forEach(b => press(b, () => startAim(+b.dataset.i), () => { if (G.aim && G.aim.i === +b.dataset.i) releaseAim(); }));
 addEventListener("keydown", e => {
@@ -8493,8 +8692,10 @@ addEventListener("keydown", e => {
   const fb = document.activeElement, onBtn = fb && fb.tagName === "BUTTON" && !fb.disabled && fb.closest("#tossBtns,#final") && !G.paused;
   if (e.code === "Space"){ e.preventDefault(); if (onBtn && !e.repeat) fb.click(); else if (G.phase === "toss" && !G.paused && !e.repeat){ const t = $("tossBtns").firstChild; if (t) t.click(); } else userAction(); }
   if (G.phase === "toss" && !G.paused && (e.code === "Digit1" || e.code === "Digit2") && !e.repeat){ const t = $("tossBtns").children[+e.code.slice(-1)-1]; if (t) t.click(); }
-  if (e.code === "ShiftLeft" || e.code === "ShiftRight") input.turbo = true;
-  if (e.code === "Escape"){ if (G.paused){ G.paused = false; showScreen(null); } else if (G.phase === "celebrate") endCelebration(); else if (G.phase !== "final"){ G.paused = true; showScreen("pause"); } return; }
+  if (e.code === "ShiftLeft" || e.code === "ShiftRight"){ if (!e.repeat && !input.hitBy.key) hitDown(); input.hitBy.key = true; }
+  // P pauses too: on portals Esc also leaves their full screen
+  const pauseKey = e.code === "Escape" || (e.code === "KeyP" && !e.repeat && !/INPUT|TEXTAREA/.test((document.activeElement || {}).tagName || ""));
+  if (pauseKey){ if (G.paused){ G.paused = false; showScreen(null); } else if (G.phase === "celebrate") endCelebration(); else if (G.phase !== "final"){ G.paused = true; showScreen("pause"); } return; }
   if (G.paused){ if (e.code.startsWith("Arrow")) e.preventDefault(); return; }   // nothing below reaches through the pause menu
   if (e.code === "KeyQ" || e.code === "KeyE") switchPlayer();
   if (["Digit1","Digit2","Digit3","Digit4","Digit5"].includes(e.code) && !e.repeat) startAim(+e.code.slice(-1)-1);
@@ -8504,12 +8705,13 @@ addEventListener("keydown", e => {
     G.pbTab = ks[(i + step + ks.length) % ks.length]; G.pbAuto = false; SFX.tick(); G.pbFill(); }
   if (e.code.startsWith("Arrow")) e.preventDefault();
 });
-addEventListener("keyup", e => { input.keys[e.code] = false; if (G.aim && e.code === `Digit${G.aim.i+1}`) releaseAim(); if (e.code.startsWith("Shift")) input.turbo = false; });
-addEventListener("blur", () => { input.keys = {}; input.turbo = false; });
+const hitRelease = () => { for (const k in input.hitBy) input.hitBy[k] = false; };
+addEventListener("keyup", e => { input.keys[e.code] = false; if (G.aim && e.code === `Digit${G.aim.i+1}`) releaseAim(); if (e.code.startsWith("Shift")) input.hitBy.key = false; });
+addEventListener("blur", () => { input.keys = {}; hitRelease(); });
 // switching tabs mid-game: come back to TIMEOUT instead of a live play (AUDIO: the engine/audio team owns AudioContext suspend/resume)
 document.addEventListener("visibilitychange", () => {
   if (!document.hidden || G.paused || ["menu","final","celebrate"].includes(G.phase) || !$("dialog").hidden || !$("coach").hidden) return;
-  G.paused = true; input.keys = {}; input.turbo = false; input.jx = input.jy = 0; showScreen("pause");
+  G.paused = true; input.keys = {}; hitRelease(); input.jx = input.jy = 0; showScreen("pause");
 });
 
 /* ---- touch vs mouse/keyboard vs controller ---- */
@@ -8521,15 +8723,16 @@ function updateHints(){
   document.body.classList.toggle("no-touch", !usingTouch || usingPad);
   $("replayBug").lastChild.textContent = SKIP(); $("lower").querySelector(".lt-skip").textContent = SKIP();
   const h = $("padHint"); if (G.phase === "menu" || G.phase === "final" || +(store.get("hc_games") || 0) >= 2){ h.hidden = true; return; }   // after two games the broadcast view stays clean
-  if (usingPad){ h.hidden = false; h.textContent = "L-STICK MOVE · A SNAP/JUKE/DIVE/SLIDE · X Y B LB LT THROW 1-5 · RT TURBO · START PAUSE"; }
-  else if (!usingTouch){ h.hidden = false; h.textContent = "WASD/ARROWS MOVE · SPACE SNAP/JUKE/DIVE/SLIDE · CLICK A RECEIVER TO THROW · SHIFT TURBO · F FULL SCREEN"; }
+  if (usingPad){ h.hidden = false; h.textContent = "L-STICK MOVE · A SNAP/JUKE/DIVE/SLIDE · X Y B LB LT THROW 1-5 · RT HIT/PROTECT · START PAUSE"; }
+  else if (!usingTouch){ h.hidden = false; h.textContent = "WASD/ARROWS MOVE · SPACE SNAP/JUKE/DIVE/SLIDE · CLICK A RECEIVER TO THROW · SHIFT HIT/PROTECT" + (fsOK() ? " · F FULL SCREEN" : ""); }
   else h.hidden = true;
 }
 addEventListener("pointerdown", e => { const t = e.pointerType === "touch"; if (t !== usingTouch){ usingTouch = t; updateHints(); } }, true);
 addEventListener("keydown", () => { if (usingTouch){ usingTouch = false; updateHints(); } }, true);
 
 /* ---- full screen (desktop + Android; iPhone Safari has no element full screen) ---- */
-const fsOK = () => !!(document.fullscreenEnabled || document.webkitFullscreenEnabled);
+// portals (CrazyGames) supply their own full screen button and forbid an in-game one
+const fsOK = () => !window.HC_PORTAL && !!(document.fullscreenEnabled || document.webkitFullscreenEnabled);
 function toggleFS(){
   const el = document.documentElement;
   try {
@@ -8559,11 +8762,12 @@ function maybeA2hs(){
 }
 $("a2hsGo").onclick = async e => { e.stopPropagation(); $("a2hs").hidden = true; store.set("hc_a2hs_t", String(Date.now())); if (installEvt){ installEvt.prompt(); installEvt = null; } };
 $("a2hsX").onclick = e => { e.stopPropagation(); $("a2hs").hidden = true; store.set("hc_a2hs_t", String(Date.now())); };
-addEventListener("keydown", e => { if (e.code === "KeyF" && G.phase !== "menu") toggleFS(); });
+addEventListener("keydown", e => { if (e.code === "KeyF" && G.phase !== "menu" && fsOK()) toggleFS(); });
 
 /* ---- game controllers (standard controllers via the Gamepad API) ----
    A/Cross = snap, juke, dive · X/Square, Y/Triangle, B/Circle = receivers 1, 2, 3
-   RT/R2 or RB/R1 = turbo · LB/L1 = switch · Start = pause · D-pad/stick = menus */
+   RT/R2 or RB/R1 = hit stick on defense (or flick the right stick at the ball carrier), hold = protect the ball
+   LB/L1 = switch · Start = pause · D-pad/stick = menus */
 const padPrev = {}; let padFocus = -1, padNavT = 0;
 function padButtons(){
   const open = ["coach","howto","pro","a2hs","dialog","pause","final","setup","pick","office","title","tossPanel"].find(id => !$(id).hidden);
@@ -8607,7 +8811,13 @@ function pollPads(dt){
   padFocus = -1; document.querySelectorAll(".gp-focus").forEach(b => b.classList.remove("gp-focus"));
   // left stick (and d-pad) drive the player; screen up = downfield
   input.jx = ax + (dR ? 1 : 0) - (dL ? 1 : 0); input.jy = -ay + (dU ? 1 : 0) - (dD ? 1 : 0);
-  input.turbo = btn(7) || btn(5) || input.keys.ShiftLeft || input.keys.ShiftRight;
+  input.hitBy.pad = btn(7) || btn(5);
+  if (edge(7) | edge(5)) hitDown();                                   // (| so both edges update)
+  // right-stick flick toward the ball carrier: the hit stick, Madden style
+  { const rx = gp.axes[2] || 0, ry = gp.axes[3] || 0, m = Math.hypot(rx, ry), was = padPrev.rs || 0; padPrev.rs = m;
+    const u = G.user, c = G.carrier;
+    if (m > .75 && was < .4 && u && c && c.team !== u.team){ const dx = c.x - u.x, dz = c.z - u.z, d = Math.hypot(dx, dz) || 1;
+      if ((-ry*dx + rx*dz)/(m*d) > .4) hitDown(); } }                 // screen up = downfield (+x), screen right = +z, like the left stick
   if (edge(0)) userAction();
   const passing = G.poss === 0 && G.sub === "pre";
   (passing ? [[2,0],[3,1],[1,2],[4,3],[6,4]] : [[2,0],[3,1],[1,2]]).forEach(([b,i]) => { if (edge(b)) startAim(i); else if (G.aim && G.aim.i === i && !btn(b)) releaseAim(); });
@@ -8615,7 +8825,7 @@ function pollPads(dt){
   if (edge(9)){ if (G.phase === "celebrate") endCelebration(); else if (G.phase !== "final"){ G.paused = true; showScreen("pause"); } }
   [5,6,7,8].forEach(edge);
 }
-addEventListener("gamepadconnected", () => { usingPad = true; usingTouch = false; updateHints(); banner("CONTROLLER ON", "A snap · X Y B throw · RT turbo"); });
+addEventListener("gamepadconnected", () => { usingPad = true; usingTouch = false; updateHints(); banner("CONTROLLER ON", "A snap · X Y B throw · RT hit / protect"); });
 addEventListener("gamepaddisconnected", () => { usingPad = false; input.jx = input.jy = 0; updateHints(); });
 
 /* ================================================================
@@ -8816,6 +9026,10 @@ loadRig();
 function backdrop(){ if (G.phase !== "menu") return;   // a game that started first keeps its own stadium
   const h = G.home, a = G.away, w = G.weather; G.home = SCHOOLS[3]; G.away = SCHOOLS[6]; buildStadium(G.home, G.away); G.weather = "clear"; applyWeather(); G.weather = h ? w : null; G.home = h || null; G.away = h ? a : null; }
 const fontsReady = Promise.race([Promise.all(["400 40px Graduate","700 40px Teko","600 20px 'Barlow Semi Condensed'","400 16px DotGothic16","700 24px 'Pixelify Sans'"].map(f => document.fonts.load(f))), new Promise(r => setTimeout(r, 2500))]).catch(()=>{});
-Promise.all([fontsReady, Promise.race([RIG.loading, new Promise(r => setTimeout(r, 4000))])]).then(backdrop).then(() => cgSDK(sdk => sdk.game.loadingStop()));
-requestAnimationFrame(frame);
+Promise.all([fontsReady, Promise.race([RIG.loading, new Promise(r => setTimeout(r, 4000))])]).then(backdrop)
+  .catch(e => console.warn("title backdrop failed", e)).then(cgLoaded);
+// the portal's loader must come down even if fonts, models or a busy GPU stall the title backdrop
+function cgLoaded(){ if (CG.loaded) return; CG.loaded = window.__hcBooted = true; cgSDK(sdk => sdk.game.loadingStop()); }
+setTimeout(cgLoaded, 7000);
+requestAnimationFrame(frame); window.__hcStage = "booted";
 </script>
