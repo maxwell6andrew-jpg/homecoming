@@ -439,6 +439,12 @@ button:focus-visible,.link:focus-visible,.search:focus-visible,summary:focus-vis
 .mrow .meter{grid-column:auto;grid-template-columns:1fr auto;gap:2px 6px;font-size:16px;letter-spacing:0;white-space:nowrap}
 .mrow .meter span{grid-column:1/-1;overflow:hidden;text-overflow:ellipsis}.mrow .meter i{height:10px}
 @media (max-width:600px){.mrow{grid-template-columns:repeat(3,1fr)}}
+/* school search on a sideways phone (the keyboard leaves ~180px): a compact header, and while typing the title/crumbs fold away
+   and the box sticks to the top so the matches show right under it */
+#pickSearch{position:sticky;top:0;z-index:2}
+@media (max-height:520px){#pick .back{font-size:16px;padding:4px 12px 2px;margin-bottom:4px}#pick h2.step{font-size:24px;margin:0 0 6px}#pick .crumbs{margin:0}
+  #pickSearch{font-size:16px;padding:7px 12px;margin-bottom:8px}#pick.typing .crumbs,#pick.typing h2.step{display:none}#pick.typing .back{margin-bottom:6px}
+  #pickList{gap:6px}#pickList .row{padding:5px 12px;margin:2px 6px}#pickList .row .nm{font-size:22px}#pickList .row .sub{font-size:12px}}
 @media (max-height:520px){.offschool{font-size:24px;padding:4px 12px 0;margin-top:0}.offtabs button{font-size:15px;padding:4px 0 2px}.money{font-size:24px;padding:4px 10px 2px}.money.prog{font-size:16px}.offstats{margin:6px 0;gap:6px}.offtabs{margin-bottom:8px}#office{padding-top:calc(env(safe-area-inset-top,0px) + 8px)}}
 .meter i::after{background:repeating-linear-gradient(90deg,var(--c) 0 6px,rgba(0,0,0,.25) 6px 7px)}
 .card canvas{image-rendering:pixelated;border:2px solid #0b1033}
@@ -8553,6 +8559,8 @@ $("backBtn").addEventListener("click", () => { if (pickState.step === 0) return 
 $("flipBtn").addEventListener("click", () => { G.flip = !G.flip; $("flipBtn").setAttribute("aria-pressed", G.flip ? "true" : "false"); SFX.tick();
   document.querySelectorAll("#cards canvas").forEach(cv => cv.style.transform = G.flip ? "scaleX(-1)" : ""); if (G.phase === "playcall") alignPreview(); });
 $("pickSearch").addEventListener("input", e => { pickState.q = e.target.value; renderPick(); });
+$("pickSearch").addEventListener("focus", () => $("pick").classList.add("typing"));
+$("pickSearch").addEventListener("blur", () => setTimeout(() => $("pick").classList.remove("typing"), 250));   // after the tap on a match lands
 $("pickSearch").addEventListener("keydown", e => { if (e.key !== "Enter") return; const r = $("pickList").querySelector("button.row:not(.soon)"); if (r){ e.preventDefault(); r.click(); } });
 $("setupBack").addEventListener("click", () => { pickState.step = 3; renderPick(); showScreen("pick"); });
 $("moreOpts").addEventListener("toggle", () => { if ($("moreOpts").open && !$("setup").hidden) $("moreOpts").querySelector(".opts").scrollIntoView({block: "nearest", behavior: reduceMotion ? "auto" : "smooth"}); });
@@ -9029,7 +9037,8 @@ const fontsReady = Promise.race([Promise.all(["400 40px Graduate","700 40px Teko
 Promise.all([fontsReady, Promise.race([RIG.loading, new Promise(r => setTimeout(r, 4000))])]).then(backdrop)
   .catch(e => console.warn("title backdrop failed", e)).then(cgLoaded);
 // the portal's loader must come down even if fonts, models or a busy GPU stall the title backdrop
-function cgLoaded(){ if (CG.loaded) return; CG.loaded = window.__hcBooted = true; cgSDK(sdk => sdk.game.loadingStop()); }
+function cgLoaded(){ if (CG.loaded) return; CG.loaded = window.__hcBooted = true; cgSDK(sdk => sdk.game.loadingStop());
+  if (window.HC_PORTAL) try { window.top.postMessage({hcBoot: Math.round(performance.now()), stage: window.__hcStage}, "*"); } catch(e){} }   // lets a test page count good boots
 setTimeout(cgLoaded, 7000);
 requestAnimationFrame(frame); window.__hcStage = "booted";
 </script>
