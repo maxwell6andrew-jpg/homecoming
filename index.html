@@ -759,7 +759,7 @@ const later = (fn, ms) => { const g = G.gen; const t = () => { if (g !== G.gen) 
 let teams = [[],[]]; // player objects, index 0 = user team
 let sound = true;
 // Privacy-friendly counts only (GoatCounter, cookieless). Empty code = analytics off. Portal builds never count.
-const ANALYTICS = {code: "", ready: false};
+const ANALYTICS = {code: "homecoming", ready: false};   // homecoming.goatcounter.com
 function track(name){ try { if (window.goatcounter && goatcounter.count) goatcounter.count({path: "event/" + name, title: name, event: true}); } catch(e){} }
 if (ANALYTICS.code && !window.HC_PORTAL){ const sc = document.createElement("script"); sc.async = true; sc.src = "https://gc.zgo.at/count.js";
   sc.dataset.goatcounter = `https://${ANALYTICS.code}.goatcounter.com/count`; document.head.appendChild(sc); }
