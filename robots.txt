@@ -1,4 +1,4 @@
 User-agent: *
-Disallow: /data/
-Disallow: /assets/
+Disallow: /?
+
 Sitemap: https://homecoming.football/sitemap.xml

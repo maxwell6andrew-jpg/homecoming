@@ -1,8 +1,55 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://homecoming.football/</loc><lastmod>2026-10-12</lastmod></url>
-  <url><loc>https://homecoming.football/pro.html</loc><lastmod>2026-10-12</lastmod></url>
-  <url><loc>https://homecoming.football/privacy.html</loc><lastmod>2026-10-12</lastmod></url>
-  <url><loc>https://homecoming.football/terms.html</loc><lastmod>2026-10-12</lastmod></url>
-  <url><loc>https://homecoming.football/credits.html</loc><lastmod>2026-10-12</lastmod></url>
-</urlset>
+<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<sitemap><loc>https://homecoming.football/sitemaps/al.xml</loc></sitemap>
+<sitemap><loc>https://homecoming.football/sitemaps/ak.xml</loc></sitemap>
+<sitemap><loc>https://homecoming.football/sitemaps/az.xml</loc></sitemap>
+<sitemap><loc>https://homecoming.football/sitemaps/ar.xml</loc></sitemap>
+<sitemap><loc>https://homecoming.football/sitemaps/ca.xml</loc></sitemap>
+<sitemap><loc>https://homecoming.football/sitemaps/co.xml</loc></sitemap>
+<sitemap><loc>https://homecoming.football/sitemaps/ct.xml</loc></sitemap>
+<sitemap><loc>https://homecoming.football/sitemaps/de.xml</loc></sitemap>
+<sitemap><loc>https://homecoming.football/sitemaps/dc.xml</loc></sitemap>
+<sitemap><loc>https://homecoming.football/sitemaps/fl.xml</loc></sitemap>
+<sitemap><loc>https://homecoming.football/sitemaps/ga.xml</loc></sitemap>
+<sitemap><loc>https://homecoming.football/sitemaps/hi.xml</loc></sitemap>
+<sitemap><loc>https://homecoming.football/sitemaps/id.xml</loc></sitemap>
+<sitemap><loc>https://homecoming.football/sitemaps/il.xml</loc></sitemap>
+<sitemap><loc>https://homecoming.football/sitemaps/in.xml</loc></sitemap>
+<sitemap><loc>https://homecoming.football/sitemaps/ia.xml</loc></sitemap>
+<sitemap><loc>https://homecoming.football/sitemaps/ks.xml</loc></sitemap>
+<sitemap><loc>https://homecoming.football/sitemaps/ky.xml</loc></sitemap>
+<sitemap><loc>https://homecoming.football/sitemaps/la.xml</loc></sitemap>
+<sitemap><loc>https://homecoming.football/sitemaps/me.xml</loc></sitemap>
+<sitemap><loc>https://homecoming.football/sitemaps/md.xml</loc></sitemap>
+<sitemap><loc>https://homecoming.football/sitemaps/ma.xml</loc></sitemap>
+<sitemap><loc>https://homecoming.football/sitemaps/mi.xml</loc></sitemap>
+<sitemap><loc>https://homecoming.football/sitemaps/mn.xml</loc></sitemap>
+<sitemap><loc>https://homecoming.football/sitemaps/ms.xml</loc></sitemap>
+<sitemap><loc>https://homecoming.football/sitemaps/mo.xml</loc></sitemap>
+<sitemap><loc>https://homecoming.football/sitemaps/mt.xml</loc></sitemap>
+<sitemap><loc>https://homecoming.football/sitemaps/ne.xml</loc></sitemap>
+<sitemap><loc>https://homecoming.football/sitemaps/nv.xml</loc></sitemap>
+<sitemap><loc>https://homecoming.football/sitemaps/nh.xml</loc></sitemap>
+<sitemap><loc>https://homecoming.football/sitemaps/nj.xml</loc></sitemap>
+<sitemap><loc>https://homecoming.football/sitemaps/nm.xml</loc></sitemap>
+<sitemap><loc>https://homecoming.football/sitemaps/ny.xml</loc></sitemap>
+<sitemap><loc>https://homecoming.football/sitemaps/nc.xml</loc></sitemap>
+<sitemap><loc>https://homecoming.football/sitemaps/nd.xml</loc></sitemap>
+<sitemap><loc>https://homecoming.football/sitemaps/oh.xml</loc></sitemap>
+<sitemap><loc>https://homecoming.football/sitemaps/ok.xml</loc></sitemap>
+<sitemap><loc>https://homecoming.football/sitemaps/or.xml</loc></sitemap>
+<sitemap><loc>https://homecoming.football/sitemaps/pa.xml</loc></sitemap>
+<sitemap><loc>https://homecoming.football/sitemaps/ri.xml</loc></sitemap>
+<sitemap><loc>https://homecoming.football/sitemaps/sc.xml</loc></sitemap>
+<sitemap><loc>https://homecoming.football/sitemaps/sd.xml</loc></sitemap>
+<sitemap><loc>https://homecoming.football/sitemaps/tn.xml</loc></sitemap>
+<sitemap><loc>https://homecoming.football/sitemaps/tx.xml</loc></sitemap>
+<sitemap><loc>https://homecoming.football/sitemaps/ut.xml</loc></sitemap>
+<sitemap><loc>https://homecoming.football/sitemaps/vt.xml</loc></sitemap>
+<sitemap><loc>https://homecoming.football/sitemaps/va.xml</loc></sitemap>
+<sitemap><loc>https://homecoming.football/sitemaps/wa.xml</loc></sitemap>
+<sitemap><loc>https://homecoming.football/sitemaps/wv.xml</loc></sitemap>
+<sitemap><loc>https://homecoming.football/sitemaps/wi.xml</loc></sitemap>
+<sitemap><loc>https://homecoming.football/sitemaps/wy.xml</loc></sitemap>
+<sitemap><loc>https://homecoming.football/sitemaps/site.xml</loc></sitemap>
+</sitemapindex>
